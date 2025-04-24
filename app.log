@@ -7617,3 +7617,11 @@
 2025-04-24 12:03:27 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.02s)
 2025-04-24 12:03:27 - root - INFO - Keine Änderungen gefunden (Scan in 0.02s) (Ausgeführt in 0.03 Sekunden)
 2025-04-24 12:03:27 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 12:07:57 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 12:07:57 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 12:07:57 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 12:07:57 - app.local_scan_manager - INFO - Saved hashes for 53 files
+2025-04-24 12:07:57 - app.local_scan_manager - INFO - Scan abgeschlossen: 53 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 12:07:57 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.04s)
+2025-04-24 12:07:57 - root - INFO - Keine Änderungen gefunden (Scan in 0.04s) (Ausgeführt in 0.04 Sekunden)
+2025-04-24 12:07:57 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
