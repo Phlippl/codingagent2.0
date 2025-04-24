@@ -181,7 +181,7 @@ class RAGManager:
                 
         except Exception as e:
             elapsed = time.time() - start_time
-            logger.error(f"Fehler bei der Verzeichnissynchronisierung: {str(e)}")
+            logger.exception(f"Fehler bei der Verzeichnissynchronisierung")
             progress.finish(f"Fehler beim Scan: {str(e)}")
             return {
                 "status": "error", 
