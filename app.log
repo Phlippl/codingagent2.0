@@ -11538,3 +11538,260 @@ AssertionError
 2025-04-24 13:53:13 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
 2025-04-24 13:53:13 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
 2025-04-24 13:53:13 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 13:56:22 - app.rag_manager - INFO - Lese Dateiinhalt: app\frontend-react\src\assets\styles\components\_header.css
+2025-04-24 13:56:22 - root - INFO - Datei gelesen: 24 Zeilen, 418 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 13:57:43 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 13:57:43 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 13:57:43 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 13:57:43 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 13:57:43 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 2 geändert, 0 gelöscht
+2025-04-24 13:57:43 - app.rag_manager - INFO - 2 geänderte Dateien gefunden, aktualisiere Index
+2025-04-24 13:57:43 - app.rag_manager - INFO - Verarbeite 2 geänderte Dateien
+2025-04-24 13:57:43 - app.dependency_graph_builder - INFO - Baue Abhängigkeitsgraph für D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 13:57:43 - app.dependency_graph_builder - INFO - Suche nach Python-Dateien und überprüfe Änderungen...
+2025-04-24 13:57:43 - app.dependency_graph_builder - INFO - Überprüfe Änderungen in 3383 Python-Dateien...
+2025-04-24 13:57:45 - app.dependency_graph_builder - INFO - Erstelle umgekehrte Aufrufbeziehungen...
+2025-04-24 13:57:45 - app.dependency_graph_builder - INFO - Speichere Abhängigkeitsgraph und Datei-Hashes...
+2025-04-24 13:57:45 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph in dependency_graph.json gespeichert
+2025-04-24 13:57:45 - app.dependency_graph_builder - INFO - Datei-Hashes in file_hashes.json gespeichert: 3423 Einträge
+2025-04-24 13:57:45 - root - INFO - Graph erstellt: 0 Knoten, 0 Kanten, 0 Dateien aktualisiert (Ausgeführt in 2.70 Sekunden)
+2025-04-24 13:57:45 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph erstellt in 2.70s: 0 Knoten, 0 Kanten
+2025-04-24 13:57:45 - app.rag_manager - INFO - Entferne vorhandene Chunks für 2 geänderte Dateien
+2025-04-24 13:57:45 - app.embedding_manager - INFO - Entferne Chunks für 2 Dateien aus dem Index
+2025-04-24 13:57:45 - app.embedding_manager - INFO - Erstelle neuen Index mit 50377 von 50379 Chunks
+2025-04-24 13:57:45 - app.rag_manager - ERROR - Fehler bei der Verzeichnissynchronisierung
+Traceback (most recent call last):
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 155, in sync_directory
+    self.process_changed_files(abs_changed_files)
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 697, in process_changed_files
+    self.embed_mgr.remove_chunks(list(relative_changed_paths))
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\embedding_manager.py", line 473, in remove_chunks
+    vector = faiss.vector_to_array(self.index.reconstruct(idx)).reshape(1, -1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DevEnv\DevProjects\codingagent2.0\.venv\Lib\site-packages\faiss\array_conversions.py", line 109, in vector_to_array
+    assert classname.endswith('Vector')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+2025-04-24 13:57:45 - root - INFO - Fehler beim Scan:  (Ausgeführt in 0.01 Sekunden)
+2025-04-24 13:57:45 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 13:58:56 - app.rag_manager - INFO - Lese Dateiinhalt: app\frontend-react\src\assets\styles\themes\test.css
+2025-04-24 13:58:56 - root - INFO - Datei gelesen: 16 Zeilen, 298 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 13:59:01 - app.rag_manager - INFO - Lese Dateiinhalt: app\frontend-react\src\assets\styles\themes\prod.css
+2025-04-24 13:59:01 - root - INFO - Datei gelesen: 11 Zeilen, 204 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 13:59:04 - app.rag_manager - INFO - Lese Dateiinhalt: app\frontend-react\src\assets\styles\components\_header.css
+2025-04-24 13:59:04 - root - INFO - Datei gelesen: 24 Zeilen, 418 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 14:02:15 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:02:15 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:02:15 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:02:15 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:02:15 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:02:15 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:02:15 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:02:15 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:03:05 - app.rag_manager - INFO - Lese Dateiinhalt: environments\test.env
+2025-04-24 14:03:05 - root - INFO - Datei gelesen: 6 Zeilen, 82 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 14:04:25 - app.rag_manager - INFO - Erzeuge Dateistruktur für . mit Tiefe 0
+2025-04-24 14:04:25 - root - INFO - Dateistruktur erstellt: 83 Dateien, 32 Verzeichnisse in 0.07s (Ausgeführt in 0.07 Sekunden)
+2025-04-24 14:04:25 - app.rag_manager - INFO - Dateistruktur erfolgreich erstellt in 0.07s
+2025-04-24 14:06:45 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:06:45 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:06:45 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:06:45 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:06:45 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:06:45 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:06:45 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:06:45 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:11:15 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:11:15 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:11:15 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:11:15 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:11:15 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:11:15 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:11:15 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:11:15 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:15:45 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:15:45 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:15:45 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:15:46 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:15:46 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 1 geändert, 0 gelöscht
+2025-04-24 14:15:46 - app.rag_manager - INFO - 1 geänderte Dateien gefunden, aktualisiere Index
+2025-04-24 14:15:46 - app.rag_manager - INFO - Verarbeite 1 geänderte Dateien
+2025-04-24 14:15:46 - app.dependency_graph_builder - INFO - Baue Abhängigkeitsgraph für D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:15:46 - app.dependency_graph_builder - INFO - Suche nach Python-Dateien und überprüfe Änderungen...
+2025-04-24 14:15:46 - app.dependency_graph_builder - INFO - Überprüfe Änderungen in 3383 Python-Dateien...
+2025-04-24 14:15:50 - app.dependency_graph_builder - INFO - Erstelle umgekehrte Aufrufbeziehungen...
+2025-04-24 14:15:50 - app.dependency_graph_builder - INFO - Speichere Abhängigkeitsgraph und Datei-Hashes...
+2025-04-24 14:15:50 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph in dependency_graph.json gespeichert
+2025-04-24 14:15:50 - app.dependency_graph_builder - INFO - Datei-Hashes in file_hashes.json gespeichert: 3423 Einträge
+2025-04-24 14:15:50 - root - INFO - Graph erstellt: 0 Knoten, 0 Kanten, 0 Dateien aktualisiert (Ausgeführt in 4.72 Sekunden)
+2025-04-24 14:15:50 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph erstellt in 4.72s: 0 Knoten, 0 Kanten
+2025-04-24 14:15:50 - app.rag_manager - INFO - Entferne vorhandene Chunks für 1 geänderte Dateien
+2025-04-24 14:15:50 - app.embedding_manager - INFO - Entferne Chunks für 1 Dateien aus dem Index
+2025-04-24 14:15:50 - app.embedding_manager - INFO - Erstelle neuen Index mit 50378 von 50379 Chunks
+2025-04-24 14:15:50 - app.rag_manager - ERROR - Fehler bei der Verzeichnissynchronisierung
+Traceback (most recent call last):
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 155, in sync_directory
+    self.process_changed_files(abs_changed_files)
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 697, in process_changed_files
+    self.embed_mgr.remove_chunks(list(relative_changed_paths))
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\embedding_manager.py", line 473, in remove_chunks
+    vector = faiss.vector_to_array(self.index.reconstruct(idx)).reshape(1, -1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DevEnv\DevProjects\codingagent2.0\.venv\Lib\site-packages\faiss\array_conversions.py", line 109, in vector_to_array
+    assert classname.endswith('Vector')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+2025-04-24 14:15:50 - root - INFO - Fehler beim Scan:  (Ausgeführt in 0.02 Sekunden)
+2025-04-24 14:15:50 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:20:20 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:20:20 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:20:20 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:20:20 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:20:20 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 1 geändert, 0 gelöscht
+2025-04-24 14:20:20 - app.rag_manager - INFO - 1 geänderte Dateien gefunden, aktualisiere Index
+2025-04-24 14:20:20 - app.rag_manager - INFO - Verarbeite 1 geänderte Dateien
+2025-04-24 14:20:20 - app.dependency_graph_builder - INFO - Baue Abhängigkeitsgraph für D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:20:20 - app.dependency_graph_builder - INFO - Suche nach Python-Dateien und überprüfe Änderungen...
+2025-04-24 14:20:21 - app.dependency_graph_builder - INFO - Überprüfe Änderungen in 3383 Python-Dateien...
+2025-04-24 14:20:25 - app.dependency_graph_builder - INFO - Erstelle umgekehrte Aufrufbeziehungen...
+2025-04-24 14:20:25 - app.dependency_graph_builder - INFO - Speichere Abhängigkeitsgraph und Datei-Hashes...
+2025-04-24 14:20:25 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph in dependency_graph.json gespeichert
+2025-04-24 14:20:25 - app.dependency_graph_builder - INFO - Datei-Hashes in file_hashes.json gespeichert: 3423 Einträge
+2025-04-24 14:20:25 - root - INFO - Graph erstellt: 0 Knoten, 0 Kanten, 0 Dateien aktualisiert (Ausgeführt in 4.54 Sekunden)
+2025-04-24 14:20:25 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph erstellt in 4.54s: 0 Knoten, 0 Kanten
+2025-04-24 14:20:25 - app.rag_manager - INFO - Entferne vorhandene Chunks für 1 geänderte Dateien
+2025-04-24 14:20:25 - app.embedding_manager - INFO - Entferne Chunks für 1 Dateien aus dem Index
+2025-04-24 14:20:25 - app.embedding_manager - INFO - Erstelle neuen Index mit 50378 von 50379 Chunks
+2025-04-24 14:20:25 - app.rag_manager - ERROR - Fehler bei der Verzeichnissynchronisierung
+Traceback (most recent call last):
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 155, in sync_directory
+    self.process_changed_files(abs_changed_files)
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 697, in process_changed_files
+    self.embed_mgr.remove_chunks(list(relative_changed_paths))
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\embedding_manager.py", line 473, in remove_chunks
+    vector = faiss.vector_to_array(self.index.reconstruct(idx)).reshape(1, -1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DevEnv\DevProjects\codingagent2.0\.venv\Lib\site-packages\faiss\array_conversions.py", line 109, in vector_to_array
+    assert classname.endswith('Vector')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+2025-04-24 14:20:25 - root - INFO - Fehler beim Scan:  (Ausgeführt in 0.02 Sekunden)
+2025-04-24 14:20:25 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:24:55 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:24:55 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:24:55 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:24:55 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:24:55 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:24:55 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.07s)
+2025-04-24 14:24:55 - root - INFO - Keine Änderungen gefunden (Scan in 0.07s) (Ausgeführt in 0.07 Sekunden)
+2025-04-24 14:24:55 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:29:25 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:29:25 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:29:25 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:29:25 - app.local_scan_manager - INFO - Saved hashes for 55 files
+2025-04-24 14:29:25 - app.local_scan_manager - INFO - Scan abgeschlossen: 55 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:29:25 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
+2025-04-24 14:29:25 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 14:29:25 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:29:38 - app.rag_manager - INFO - Erzeuge Dateistruktur für . mit Tiefe 0
+2025-04-24 14:29:38 - root - INFO - Dateistruktur erstellt: 83 Dateien, 32 Verzeichnisse in 0.03s (Ausgeführt in 0.02 Sekunden)
+2025-04-24 14:29:38 - app.rag_manager - INFO - Dateistruktur erfolgreich erstellt in 0.03s
+2025-04-24 14:31:48 - app.rag_manager - INFO - Lese Dateiinhalt: app\frontend-react\src\assets\styles\base\custom.css
+2025-04-24 14:31:48 - root - INFO - Datei gelesen: 5 Zeilen, 83 Bytes in 0.00s (Ausgeführt in 0.00 Sekunden)
+2025-04-24 14:33:55 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:33:55 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:33:55 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:33:55 - app.local_scan_manager - INFO - Gelöschte Datei erkannt: app\frontend-react\src\assets\styles\base\custom.css
+2025-04-24 14:33:55 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:33:55 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 2 geändert, 1 gelöscht
+2025-04-24 14:33:55 - app.rag_manager - INFO - 2 geänderte Dateien gefunden, aktualisiere Index
+2025-04-24 14:33:55 - app.rag_manager - INFO - Verarbeite 2 geänderte Dateien
+2025-04-24 14:33:55 - app.dependency_graph_builder - INFO - Baue Abhängigkeitsgraph für D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:33:55 - app.dependency_graph_builder - INFO - Suche nach Python-Dateien und überprüfe Änderungen...
+2025-04-24 14:33:56 - app.dependency_graph_builder - INFO - Überprüfe Änderungen in 3383 Python-Dateien...
+2025-04-24 14:34:00 - app.dependency_graph_builder - INFO - Erstelle umgekehrte Aufrufbeziehungen...
+2025-04-24 14:34:00 - app.dependency_graph_builder - INFO - Speichere Abhängigkeitsgraph und Datei-Hashes...
+2025-04-24 14:34:00 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph in dependency_graph.json gespeichert
+2025-04-24 14:34:00 - app.dependency_graph_builder - INFO - Datei-Hashes in file_hashes.json gespeichert: 3423 Einträge
+2025-04-24 14:34:00 - root - INFO - Graph erstellt: 0 Knoten, 0 Kanten, 0 Dateien aktualisiert (Ausgeführt in 4.66 Sekunden)
+2025-04-24 14:34:00 - app.dependency_graph_builder - INFO - Abhängigkeitsgraph erstellt in 4.66s: 0 Knoten, 0 Kanten
+2025-04-24 14:34:00 - app.rag_manager - INFO - Entferne vorhandene Chunks für 1 geänderte Dateien
+2025-04-24 14:34:00 - app.embedding_manager - INFO - Entferne Chunks für 1 Dateien aus dem Index
+2025-04-24 14:34:00 - app.embedding_manager - INFO - Erstelle neuen Index mit 50378 von 50379 Chunks
+2025-04-24 14:34:00 - app.rag_manager - ERROR - Fehler bei der Verzeichnissynchronisierung
+Traceback (most recent call last):
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 155, in sync_directory
+    self.process_changed_files(abs_changed_files)
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\rag_manager.py", line 697, in process_changed_files
+    self.embed_mgr.remove_chunks(list(relative_changed_paths))
+  File "D:\DevEnv\DevProjects\codingagent2.0\app\embedding_manager.py", line 473, in remove_chunks
+    vector = faiss.vector_to_array(self.index.reconstruct(idx)).reshape(1, -1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DevEnv\DevProjects\codingagent2.0\.venv\Lib\site-packages\faiss\array_conversions.py", line 109, in vector_to_array
+    assert classname.endswith('Vector')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+2025-04-24 14:34:00 - root - INFO - Fehler beim Scan:  (Ausgeführt in 0.04 Sekunden)
+2025-04-24 14:34:00 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:38:30 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:38:30 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:38:30 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:38:30 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:38:30 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:38:30 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.07s)
+2025-04-24 14:38:30 - root - INFO - Keine Änderungen gefunden (Scan in 0.07s) (Ausgeführt in 0.07 Sekunden)
+2025-04-24 14:38:30 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:43:00 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:43:00 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:43:00 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:43:00 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:43:00 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:43:00 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.11s)
+2025-04-24 14:43:00 - root - INFO - Keine Änderungen gefunden (Scan in 0.11s) (Ausgeführt in 0.11 Sekunden)
+2025-04-24 14:43:00 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:47:30 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:47:30 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:47:30 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:47:30 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:47:30 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:47:30 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:47:30 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:47:30 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:49:58 - app.rag_manager - INFO - Erzeuge Dateistruktur für . mit Tiefe 0
+2025-04-24 14:49:58 - root - INFO - Dateistruktur erstellt: 82 Dateien, 32 Verzeichnisse in 0.06s (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:49:58 - app.rag_manager - INFO - Dateistruktur erfolgreich erstellt in 0.06s
+2025-04-24 14:52:00 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:52:00 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:52:00 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:52:00 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:52:00 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:52:00 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:52:00 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:52:00 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 14:53:15 - app.rag_manager - INFO - Erzeuge Dateistruktur für . mit Tiefe 0
+2025-04-24 14:53:15 - root - INFO - Dateistruktur erstellt: 82 Dateien, 32 Verzeichnisse in 0.06s (Ausgeführt in 0.05 Sekunden)
+2025-04-24 14:53:15 - app.rag_manager - INFO - Dateistruktur erfolgreich erstellt in 0.06s
+2025-04-24 14:56:30 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:56:30 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:56:30 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 14:56:30 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 14:56:30 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 14:56:30 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.06s)
+2025-04-24 14:56:30 - root - INFO - Keine Änderungen gefunden (Scan in 0.06s) (Ausgeführt in 0.06 Sekunden)
+2025-04-24 14:56:30 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:01:00 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:01:00 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:01:00 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:01:00 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:01:00 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:01:00 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
+2025-04-24 15:01:00 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:01:00 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:05:30 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:05:30 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:05:30 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:05:30 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:05:30 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:05:30 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
+2025-04-24 15:05:30 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:05:30 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
