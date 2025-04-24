@@ -11953,3 +11953,22 @@ AssertionError
 2025-04-24 15:17:04 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.04s)
 2025-04-24 15:17:04 - root - INFO - Keine Änderungen gefunden (Scan in 0.04s) (Ausgeführt in 0.04 Sekunden)
 2025-04-24 15:17:04 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:21:34 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:21:34 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:21:34 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:21:34 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:21:34 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:21:34 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
+2025-04-24 15:21:34 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:21:34 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:21:53 - app.rag_manager - INFO - Erzeuge Dateistruktur für . mit Tiefe 0
+2025-04-24 15:21:53 - root - INFO - Dateistruktur erstellt: 82 Dateien, 32 Verzeichnisse in 0.03s (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:21:53 - app.rag_manager - INFO - Dateistruktur erfolgreich erstellt in 0.03s
+2025-04-24 15:26:04 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:26:04 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:26:04 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:26:04 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:26:04 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:26:04 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.03s)
+2025-04-24 15:26:04 - root - INFO - Keine Änderungen gefunden (Scan in 0.03s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:26:04 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden

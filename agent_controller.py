@@ -6,7 +6,6 @@ import json
 import threading
 import time
 import signal
-import webbrowser
 from pathlib import Path
 
 class ProcessManager:
@@ -174,22 +173,11 @@ class AgentController:
         # Stelle sicher, dass die HTML-Datei existiert
         if not os.path.exists(self.html_path):
             self._create_html_file()
-        
-        # Erstelle das Webview-Fenster
-        self.window = webview.create_window(
-            'CodeContextAI Controller',
-            self.html_path,
-            js_api=self.process_manager,
-            width=900,
-            height=800,
-            min_size=(800, 600)
-        )
     
     def _create_html_file(self):
         """Erstellt die HTML-Datei, falls sie nicht existiert."""
         print("HTML-UI-Datei wird erstellt...")
         
-        # Holen Sie den HTML-Inhalt aus dem Artefakt oder definieren Sie ihn direkt hier
         html_content = """<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -303,27 +291,6 @@ class AgentController:
         .log-error {
             color: #e74c3c;
         }
-        .tunnel-url {
-            font-family: 'Consolas', 'Courier New', monospace;
-            background-color: #f1f1f1;
-            padding: 10px;
-            border-radius: 4px;
-            word-break: break-all;
-        }
-        .tunnel-url a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        .tunnel-url a:hover {
-            text-decoration: underline;
-        }
-        .info-box {
-            background-color: #d6eaf8;
-            border-left: 4px solid #3498db;
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-radius: 0 4px 4px 0;
-        }
         .spinner {
             width: 20px;
             height: 20px;
@@ -341,64 +308,19 @@ class AgentController:
         .hidden {
             display: none;
         }
-        .settings-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .settings-row label {
-            flex: 0 0 180px;
-            font-weight: 600;
-        }
-        .settings-row input[type="text"],
-        .settings-row input[type="number"] {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .settings-row input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-        }
-        .system-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .info-item {
-            background-color: #f1f1f1;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .info-item-label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #7f8c8d;
-            font-size: 12px;
-        }
-        .info-item-value {
-            font-family: 'Consolas', 'Courier New', monospace;
-            word-break: break-all;
-        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>CodeContextAI Control Panel</h1>
+        <h1>CodeContextAI Controller</h1>
         <div class="status-badge status-offline" id="agent-status">Offline</div>
     </div>
 
     <div class="card">
         <h2>Agent Steuerung</h2>
         <div class="button-group">
-            <button id="start-agent" class="action-button success">
-                <span id="start-spinner" class="spinner hidden"></span>
-                Agent starten
-            </button>
+            <button id="start-agent" class="action-button success">Agent starten</button>
             <button id="stop-agent" class="action-button danger" disabled>Agent stoppen</button>
-            <button id="restart-agent" class="action-button" disabled>Neustart</button>
         </div>
         
         <div class="log-panel" id="log-panel">
@@ -412,10 +334,7 @@ class AgentController:
             <p>Kein aktiver Tunnel vorhanden.</p>
         </div>
         <div class="button-group">
-            <button id="start-tunnel" class="action-button success" disabled>
-                <span id="tunnel-spinner" class="spinner hidden"></span>
-                Tunnel starten
-            </button>
+            <button id="start-tunnel" class="action-button success" disabled>Tunnel starten</button>
             <button id="stop-tunnel" class="action-button danger" disabled>Tunnel stoppen</button>
         </div>
     </div>
@@ -424,70 +343,22 @@ class AgentController:
         <h2>Synchronisation</h2>
         <p>Synchronisieren Sie das Projektverzeichnis mit dem Index.</p>
         <div class="button-group">
-            <button id="sync-project" class="action-button" disabled>
-                <span id="sync-spinner" class="spinner hidden"></span>
-                Jetzt synchronisieren
-            </button>
-            <button id="rebuild-index" class="action-button danger" disabled>
-                <span id="rebuild-spinner" class="spinner hidden"></span>
-                Index neu aufbauen
-            </button>
-        </div>
-        
-        <div class="settings-row" style="margin-top: 15px;">
-            <label for="auto-sync-toggle">Automatische Synchronisation:</label>
-            <input type="checkbox" id="auto-sync-toggle" disabled>
-        </div>
-        
-        <div class="settings-row">
-            <label for="sync-interval">Sync-Intervall (Sekunden):</label>
-            <input type="number" id="sync-interval" min="30" value="300" disabled>
-        </div>
-        
-        <div class="button-group">
-            <button id="save-sync-settings" class="action-button" disabled>Einstellungen speichern</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>System Informationen</h2>
-        <div class="system-info">
-            <div class="info-item">
-                <div class="info-item-label">Projektpfad</div>
-                <div class="info-item-value" id="project-path">-</div>
-            </div>
-            <div class="info-item">
-                <div class="info-item-label">Letzte Synchronisation</div>
-                <div class="info-item-value" id="last-sync">-</div>
-            </div>
-            <div class="info-item">
-                <div class="info-item-label">Index Status</div>
-                <div class="info-item-value" id="index-status">-</div>
-            </div>
-            <div class="info-item">
-                <div class="info-item-label">API Status</div>
-                <div class="info-item-value" id="api-status">-</div>
-            </div>
+            <button id="sync-project" class="action-button" disabled>Jetzt synchronisieren</button>
+            <button id="rebuild-index" class="action-button danger" disabled>Index neu aufbauen</button>
         </div>
     </div>
 
     <script>
-        // Konfiguration
-        const API_URL = 'http://localhost:8000';  // URL der FastAPI
-        const API_KEY = 'your-secret-api-key';    // API Key aus der .env Datei
-        
         // Status-Variablen
         let agentRunning = false;
         let tunnelRunning = false;
         let agentProcess = null;
         let tunnelProcess = null;
-        let tunnelUrl = '';
         
         // Elemente
         const agentStatusBadge = document.getElementById('agent-status');
         const startAgentBtn = document.getElementById('start-agent');
         const stopAgentBtn = document.getElementById('stop-agent');
-        const restartAgentBtn = document.getElementById('restart-agent');
         const logPanel = document.getElementById('log-panel');
         
         const startTunnelBtn = document.getElementById('start-tunnel');
@@ -496,30 +367,11 @@ class AgentController:
         
         const syncProjectBtn = document.getElementById('sync-project');
         const rebuildIndexBtn = document.getElementById('rebuild-index');
-        const autoSyncToggle = document.getElementById('auto-sync-toggle');
-        const syncIntervalInput = document.getElementById('sync-interval');
-        const saveSyncSettingsBtn = document.getElementById('save-sync-settings');
         
-        const projectPathInfo = document.getElementById('project-path');
-        const lastSyncInfo = document.getElementById('last-sync');
-        const indexStatusInfo = document.getElementById('index-status');
-        const apiStatusInfo = document.getElementById('api-status');
-        
-        // Spinner
-        const startSpinner = document.getElementById('start-spinner');
-        const tunnelSpinner = document.getElementById('tunnel-spinner');
-        const syncSpinner = document.getElementById('sync-spinner');
-        const rebuildSpinner = document.getElementById('rebuild-spinner');
+        // API URL
+        const API_URL = 'http://localhost:8000';
         
         // Helper
-        function showSpinner(spinner) {
-            spinner.classList.remove('hidden');
-        }
-        
-        function hideSpinner(spinner) {
-            spinner.classList.add('hidden');
-        }
-        
         function logMessage(message, type = 'normal') {
             const entry = document.createElement('div');
             entry.className = `log-entry log-${type}`;
@@ -536,45 +388,31 @@ class AgentController:
                 agentStatusBadge.className = 'status-badge status-online';
                 startAgentBtn.disabled = true;
                 stopAgentBtn.disabled = false;
-                restartAgentBtn.disabled = false;
                 startTunnelBtn.disabled = false;
                 syncProjectBtn.disabled = false;
                 rebuildIndexBtn.disabled = false;
-                autoSyncToggle.disabled = false;
-                syncIntervalInput.disabled = false;
-                saveSyncSettingsBtn.disabled = false;
-                apiStatusInfo.textContent = 'Online';
             } else {
                 agentStatusBadge.textContent = 'Offline';
                 agentStatusBadge.className = 'status-badge status-offline';
                 startAgentBtn.disabled = false;
                 stopAgentBtn.disabled = true;
-                restartAgentBtn.disabled = true;
                 startTunnelBtn.disabled = true;
                 stopTunnelBtn.disabled = true;
                 syncProjectBtn.disabled = true;
                 rebuildIndexBtn.disabled = true;
-                autoSyncToggle.disabled = true;
-                syncIntervalInput.disabled = true;
-                saveSyncSettingsBtn.disabled = true;
-                apiStatusInfo.textContent = 'Offline';
             }
         }
         
         function updateTunnelStatus(running, url = '') {
             tunnelRunning = running;
-            tunnelUrl = url;
             
             if (running && url) {
                 startTunnelBtn.disabled = true;
                 stopTunnelBtn.disabled = false;
                 tunnelInfo.innerHTML = `
                     <p>Aktiver Tunnel:</p>
-                    <div class="tunnel-url">
+                    <div style="background: #f1f1f1; padding: 10px; border-radius: 4px; font-family: monospace;">
                         <a href="${url}" target="_blank">${url}</a>
-                    </div>
-                    <div class="info-box">
-                        Klicken Sie auf die URL, um die API in einem neuen Tab zu öffnen.
                     </div>
                 `;
             } else {
@@ -587,22 +425,10 @@ class AgentController:
         // API Funktionen
         async function checkApiStatus() {
             try {
-                const response = await fetch(`${API_URL}/`, {
-                    headers: {
-                        'X-API-Key': API_KEY
-                    }
-                });
+                const response = await fetch(`${API_URL}/`);
                 
                 if (response.ok) {
-                    const data = await response.json();
                     updateAgentStatus(true);
-                    projectPathInfo.textContent = data.local_path || '-';
-                    lastSyncInfo.textContent = data.last_sync ? new Date(data.last_sync).toLocaleString() : 'Noch nie';
-                    
-                    // Auto-Sync Einstellungen
-                    autoSyncToggle.checked = data.auto_sync;
-                    syncIntervalInput.value = data.sync_interval || 300;
-                    
                     return true;
                 } else {
                     updateAgentStatus(false);
@@ -614,150 +440,129 @@ class AgentController:
             }
         }
         
-        async function startAgent() {
-            showSpinner(startSpinner);
+        // Event Listeners
+        startAgentBtn.addEventListener('click', async function() {
             logMessage('Starte CodeContextAI Agent...', 'info');
             
             try {
-                // Windows-spezifischer Befehl zum Starten des Agenten
-                agentProcess = await window.chrome.webview.hostObjects.processManager.startProcess(
-                    'uvicorn', 
-                    ['main:app', '--host', '0.0.0.0', '--port', '8000', '--reload']
-                );
+                // Starte den Agenten mit Python-Funktion
+                agentProcess = await pywebview.api.startProcess('uvicorn', ['main:app', '--host', '0.0.0.0', '--port', '8000']);
                 
                 // Warte kurz und prüfe den Status
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                const isRunning = await checkApiStatus();
+                setTimeout(async function() {
+                    const isRunning = await checkApiStatus();
+                    
+                    if (isRunning) {
+                        logMessage('Agent erfolgreich gestartet!', 'success');
+                    } else {
+                        logMessage('Agent konnte nicht gestartet werden.', 'error');
+                    }
+                }, 3000);
                 
-                if (isRunning) {
-                    logMessage('Agent erfolgreich gestartet!', 'success');
-                    updateIndexStatus();
-                } else {
-                    logMessage('Agent konnte nicht gestartet werden.', 'error');
-                }
             } catch (error) {
-                logMessage(`Fehler beim Starten des Agenten: ${error.message}`, 'error');
+                logMessage(`Fehler beim Starten des Agenten: ${error}`, 'error');
                 updateAgentStatus(false);
-            } finally {
-                hideSpinner(startSpinner);
             }
-        }
+        });
         
-        async function stopAgent() {
+        stopAgentBtn.addEventListener('click', async function() {
             logMessage('Stoppe CodeContextAI Agent...', 'info');
             
             try {
                 if (tunnelRunning) {
-                    await stopTunnel();
+                    await pywebview.api.killProcess('ngrok');
+                    updateTunnelStatus(false);
                 }
                 
-                // Windows-spezifischer Befehl zum Stoppen des Agenten
                 if (agentProcess) {
-                    await window.chrome.webview.hostObjects.processManager.stopProcess(agentProcess);
+                    await pywebview.api.stopProcess(agentProcess);
                     agentProcess = null;
                 } else {
-                    await window.chrome.webview.hostObjects.processManager.killProcess('uvicorn');
+                    await pywebview.api.killProcess('uvicorn');
                 }
                 
                 updateAgentStatus(false);
                 logMessage('Agent gestoppt.', 'success');
             } catch (error) {
-                logMessage(`Fehler beim Stoppen des Agenten: ${error.message}`, 'error');
+                logMessage(`Fehler beim Stoppen des Agenten: ${error}`, 'error');
             }
-        }
+        });
         
-        async function startTunnel() {
-            showSpinner(tunnelSpinner);
+        startTunnelBtn.addEventListener('click', async function() {
             logMessage('Starte ngrok Tunnel...', 'info');
             
             try {
-                // Windows-spezifischer Befehl zum Starten von ngrok
-                tunnelProcess = await window.chrome.webview.hostObjects.processManager.startProcess(
-                    'ngrok', 
-                    ['http', '8000']
-                );
+                tunnelProcess = await pywebview.api.startProcess('ngrok', ['http', '8000']);
                 
                 // Warte kurz, dann hole die Tunnel-URL
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                try {
-                    const response = await fetch('http://localhost:4040/api/tunnels');
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.tunnels && data.tunnels.length > 0) {
-                            // Suche die HTTPS URL
-                            const httpsUrl = data.tunnels.find(tunnel => 
-                                tunnel.public_url.startsWith('https://')
-                            )?.public_url;
-                            
-                            if (httpsUrl) {
-                                updateTunnelStatus(true, httpsUrl);
-                                logMessage(`Tunnel erfolgreich erstellt: ${httpsUrl}`, 'success');
+                setTimeout(async function() {
+                    try {
+                        const response = await fetch('http://localhost:4040/api/tunnels');
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.tunnels && data.tunnels.length > 0) {
+                                const httpsUrl = data.tunnels.find(tunnel => 
+                                    tunnel.public_url.startsWith('https://')
+                                )?.public_url;
+                                
+                                if (httpsUrl) {
+                                    updateTunnelStatus(true, httpsUrl);
+                                    logMessage(`Tunnel erfolgreich erstellt: ${httpsUrl}`, 'success');
+                                } else {
+                                    logMessage('Keine HTTPS-URL im Tunnel gefunden.', 'error');
+                                    updateTunnelStatus(false);
+                                }
                             } else {
-                                logMessage('Keine HTTPS-URL im Tunnel gefunden.', 'error');
+                                logMessage('Keine Tunnel gefunden.', 'error');
                                 updateTunnelStatus(false);
                             }
                         } else {
-                            logMessage('Keine Tunnel gefunden.', 'error');
+                            logMessage('Konnte Tunnel-Informationen nicht abrufen.', 'error');
                             updateTunnelStatus(false);
                         }
-                    } else {
-                        logMessage('Konnte Tunnel-Informationen nicht abrufen.', 'error');
-                        updateTunnelStatus(false);
+                    } catch (error) {
+                        logMessage('Fehler beim Abrufen der Tunnel-URL.', 'error');
+                        updateTunnelStatus(true, 'Tunnel läuft, URL konnte nicht ermittelt werden');
                     }
-                } catch (error) {
-                    logMessage('Fehler beim Abrufen der Tunnel-URL.', 'error');
-                    updateTunnelStatus(true, 'Tunnel läuft, URL konnte nicht ermittelt werden');
-                }
+                }, 2000);
                 
             } catch (error) {
-                logMessage(`Fehler beim Starten des Tunnels: ${error.message}`, 'error');
+                logMessage(`Fehler beim Starten des Tunnels: ${error}`, 'error');
                 updateTunnelStatus(false);
-            } finally {
-                hideSpinner(tunnelSpinner);
             }
-        }
+        });
         
-        async function stopTunnel() {
+        stopTunnelBtn.addEventListener('click', async function() {
             logMessage('Stoppe ngrok Tunnel...', 'info');
             
             try {
-                // Windows-spezifischer Befehl zum Stoppen von ngrok
                 if (tunnelProcess) {
-                    await window.chrome.webview.hostObjects.processManager.stopProcess(tunnelProcess);
+                    await pywebview.api.stopProcess(tunnelProcess);
                     tunnelProcess = null;
                 } else {
-                    await window.chrome.webview.hostObjects.processManager.killProcess('ngrok');
+                    await pywebview.api.killProcess('ngrok');
                 }
                 
                 updateTunnelStatus(false);
                 logMessage('Tunnel gestoppt.', 'success');
             } catch (error) {
-                logMessage(`Fehler beim Stoppen des Tunnels: ${error.message}`, 'error');
+                logMessage(`Fehler beim Stoppen des Tunnels: ${error}`, 'error');
             }
-        }
+        });
         
-        async function syncProject() {
+        syncProjectBtn.addEventListener('click', async function() {
             if (!agentRunning) return;
             
-            showSpinner(syncSpinner);
             logMessage('Starte Projektsynchronisation...', 'info');
             
             try {
-                const response = await fetch(`${API_URL}/sync?wait=true`, {
-                    headers: {
-                        'X-API-Key': API_KEY
-                    }
-                });
+                const response = await fetch(`${API_URL}/sync?wait=true`);
                 
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'success') {
                         const changedFiles = data.changed_files || [];
                         logMessage(`Synchronisation abgeschlossen: ${changedFiles.length} Dateien geändert.`, 'success');
-                        
-                        // Aktualisiere Last-Sync Info
-                        lastSyncInfo.textContent = new Date().toLocaleString();
                     } else {
                         logMessage(`Synchronisation fehlgeschlagen: ${data.message}`, 'error');
                     }
@@ -765,28 +570,24 @@ class AgentController:
                     logMessage('Synchronisation fehlgeschlagen: API-Fehler', 'error');
                 }
             } catch (error) {
-                logMessage(`Fehler bei der Synchronisation: ${error.message}`, 'error');
-            } finally {
-                hideSpinner(syncSpinner);
+                logMessage(`Fehler bei der Synchronisation: ${error}`, 'error');
             }
-        }
+        });
         
-        async function rebuildIndex() {
+        rebuildIndexBtn.addEventListener('click', async function() {
             if (!agentRunning) return;
             
             if (!confirm('Soll der Index wirklich komplett neu aufgebaut werden? Dies kann bei großen Projekten einige Zeit dauern.')) {
-            return;
+                return;
             }
             
-            showSpinner(rebuildSpinner);
             logMessage('Starte kompletten Neuaufbau des Index...', 'info');
             
             try {
                 const response = await fetch(`${API_URL}/rebuild?wait=true`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': API_KEY
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         force_rebuild: true
@@ -797,12 +598,6 @@ class AgentController:
                     const data = await response.json();
                     if (data.status === 'success') {
                         logMessage(`Index-Neuaufbau abgeschlossen: ${data.chunks_processed || 0} Chunks verarbeitet.`, 'success');
-                        
-                        // Aktualisiere Last-Sync Info
-                        lastSyncInfo.textContent = new Date().toLocaleString();
-                        
-                        // Aktualisiere Index-Status
-                        await updateIndexStatus();
                     } else {
                         logMessage(`Index-Neuaufbau fehlgeschlagen: ${data.message}`, 'error');
                     }
@@ -810,91 +605,13 @@ class AgentController:
                     logMessage('Index-Neuaufbau fehlgeschlagen: API-Fehler', 'error');
                 }
             } catch (error) {
-                logMessage(`Fehler beim Index-Neuaufbau: ${error.message}`, 'error');
-            } finally {
-                hideSpinner(rebuildSpinner);
+                logMessage(`Fehler beim Index-Neuaufbau: ${error}`, 'error');
             }
-        }
-        
-        async function updateIndexStatus() {
-            if (!agentRunning) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/dependencies`, {
-                    headers: {
-                        'X-API-Key': API_KEY
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        indexStatusInfo.textContent = `${data.node_count || 0} Knoten, ${data.edge_count || 0} Kanten`;
-                    } else {
-                        indexStatusInfo.textContent = 'Fehler beim Abrufen';
-                    }
-                } else {
-                    indexStatusInfo.textContent = 'Fehler beim Abrufen';
-                }
-            } catch (error) {
-                indexStatusInfo.textContent = 'Fehler beim Abrufen';
-            }
-        }
-        
-        async function updateAutoSyncSettings() {
-            if (!agentRunning) return;
-            
-            const enabled = autoSyncToggle.checked;
-            const interval = parseInt(syncIntervalInput.value, 10);
-            
-            if (isNaN(interval) || interval < 30) {
-                alert('Das Sync-Intervall muss mindestens 30 Sekunden betragen.');
-                return;
-            }
-            
-            logMessage(`Aktualisiere Auto-Sync Einstellungen: ${enabled ? 'aktiviert' : 'deaktiviert'}, Intervall: ${interval}s`, 'info');
-            
-            try {
-                const response = await fetch(`${API_URL}/auto_sync?enabled=${enabled}&interval=${interval}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-API-Key': API_KEY
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success' || data.status === 'info') {
-                        logMessage(`Auto-Sync Einstellungen aktualisiert: ${data.message}`, 'success');
-                    } else {
-                        logMessage(`Fehler beim Aktualisieren der Auto-Sync Einstellungen: ${data.message}`, 'error');
-                    }
-                } else {
-                    logMessage('Fehler beim Aktualisieren der Auto-Sync Einstellungen: API-Fehler', 'error');
-                }
-            } catch (error) {
-                logMessage(`Fehler beim Aktualisieren der Auto-Sync Einstellungen: ${error.message}`, 'error');
-            }
-        }
-        
-        // Event Listeners
-        startAgentBtn.addEventListener('click', startAgent);
-        stopAgentBtn.addEventListener('click', stopAgent);
-        restartAgentBtn.addEventListener('click', async () => {
-            await stopAgent();
-            setTimeout(startAgent, 1000);
         });
-        
-        startTunnelBtn.addEventListener('click', startTunnel);
-        stopTunnelBtn.addEventListener('click', stopTunnel);
-        
-        syncProjectBtn.addEventListener('click', syncProject);
-        rebuildIndexBtn.addEventListener('click', rebuildIndex);
-        saveSyncSettingsBtn.addEventListener('click', updateAutoSyncSettings);
         
         // Initialisierung
         async function initialize() {
-            logMessage('Starte Initialisierung...', 'info');
+            logMessage('Prüfe API-Status...', 'info');
             const isRunning = await checkApiStatus();
             
             if (isRunning) {
@@ -919,23 +636,19 @@ class AgentController:
                 } catch (error) {
                     // Kein Tunnel aktiv, ignorieren
                 }
-                
-                // Index-Status aktualisieren
-                await updateIndexStatus();
             } else {
                 logMessage('Agent ist nicht gestartet. Verwenden Sie den "Agent starten" Button.', 'info');
             }
         }
         
-        // Starte Initialisierung
-        initialize();
+        // Führe Initialisierung aus, wenn DOM geladen ist
+        document.addEventListener('DOMContentLoaded', initialize);
         
-        // Status-Update alle 30 Sekunden
-        setInterval(async () => {
-            if (agentRunning) {
-                await checkApiStatus();
-            }
-        }, 30000);
+        // Prüfe regelmäßig den Status
+        setInterval(checkApiStatus, 5000);
+        
+        // Log, dass das UI geladen wurde
+        logMessage('UI geladen und bereit.', 'info');
     </script>
 </body>
 </html>"""
@@ -948,15 +661,33 @@ class AgentController:
     
     def run(self):
         """Startet die Anwendung."""
-        # Event-Handler für das Schließen des Fensters
-        def on_closing():
+        # Erstelle das Webview-Fenster erst hier für bessere Kompatibilität
+        window = webview.create_window(
+            'CodeContextAI Controller',
+            self.html_path,
+            js_api=self.process_manager,
+            width=900,
+            height=800,
+            min_size=(800, 600)
+        )
+        
+        def clean_up():
             print("Anwendung wird beendet, stoppe alle Prozesse...")
             self.process_manager.cleanupAllProcesses()
+            
+        # Verwende das on_closing-Event, wenn verfügbar
+        try:
+            window.events.closing += clean_up
+            print("Event-Handler für Fenster-Schließen registriert")
+        except AttributeError:
+            print("Fenster-Schließen-Event nicht verfügbar, verwende alternativen Ansatz")
         
-        self.window.events.closed += on_closing
-                
-        # Starte das Webview
-        webview.start(debug=True)
+        # Starte das Webview mit Cleanup bei Beendigung
+        try:
+            webview.start(debug=True)
+        finally:
+            # Stelle sicher, dass Prozesse bereinigt werden, auch wenn kein Event verfügbar ist
+            clean_up()
 
 
 def main():
