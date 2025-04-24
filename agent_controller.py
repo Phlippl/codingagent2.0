@@ -1,12 +1,44 @@
+"""
+agent_controller.py - Controller für Benutzeroberfläche mit Logging-Anzeige und Fortschrittsbalken
+
+Integriert die Logging- und Fortschrittsfunktionen der bestehenden Anwendung und 
+zeigt sie in einem Echtzeit-Interface an. Ermöglicht Starten des Agenten, ngrok-Tunnel
+und andere Verwaltungsfunktionen.
+"""
+
 import os
 import sys
-import subprocess
-import webview
-import json
-import threading
 import time
+import queue
 import signal
-from pathlib import Path
+import threading
+import logging
+import tkinter as tk
+import subprocess
+from tkinter import ttk, scrolledtext, filedialog, messagebox
+from typing import Optional, Callable, Dict, Any, List
+import io
+import json
+import socket
+import requests
+from urllib.parse import urlparse
+
+# Eigene Imports
+from app import progress
+from app.rag_manager import RAGManager
+
+# Eigene Logging-Handler-Klasse, die Logs in die UI-Queue schreibt
+class QueueHandler(logging.Handler):
+    """
+    Logging-Handler, der Logs in eine Queue schreibt für Thread-sichere Anzeige in der UI
+    """
+    def __init__(self, log_queue):
+        super().__init__()
+        self.log_queue = log_queue
+        
+    def emit(self, record):
+        self.log_queue.put(record)
+
 
 class ProcessManager:
     """Stellt Methoden zum Starten und Stoppen von Prozessen bereit."""
@@ -15,13 +47,14 @@ class ProcessManager:
         self.processes = {}
         self.process_counter = 0
     
-    def startProcess(self, program, args=None):
+    def start_process(self, program, args=None, cwd=None):
         """
         Startet einen Prozess und gibt eine ID zurück.
         
         Args:
             program: Der Pfad zum ausführbaren Programm
             args: Eine Liste von Argumenten (optional)
+            cwd: Arbeitsverzeichnis (optional)
             
         Returns:
             Eine eindeutige Prozess-ID
@@ -37,6 +70,7 @@ class ProcessManager:
                     process = subprocess.Popen(
                         [program] + args, 
                         env=env,
+                        cwd=cwd,
                         creationflags=subprocess.CREATE_NO_WINDOW,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE
@@ -46,6 +80,7 @@ class ProcessManager:
                     process = subprocess.Popen(
                         [program] + args, 
                         env=env,
+                        cwd=cwd,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE
                     )
@@ -55,6 +90,7 @@ class ProcessManager:
                     process = subprocess.Popen(
                         program,
                         env=env,
+                        cwd=cwd,
                         creationflags=subprocess.CREATE_NO_WINDOW,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE
@@ -63,30 +99,29 @@ class ProcessManager:
                     process = subprocess.Popen(
                         program,
                         env=env,
+                        cwd=cwd,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE
                     )
             
             # Prozess speichern
             self.process_counter += 1
-            process_id = str(self.process_counter)
+            process_id = f"proc_{self.process_counter}"
             self.processes[process_id] = process
             
-            print(f"Prozess {process_id} gestartet: {program} {' '.join(args) if args else ''}")
+            logging.info(f"Prozess {process_id} gestartet: {program} {' '.join(args) if args else ''}")
             
-            # Ausgabe im Hintergrund lesen
-            def read_output(proc):
-                for line in proc.stdout:
-                    print(f"[Prozess {process_id}] {line.decode('utf-8', errors='replace').strip()}")
-            
-            threading.Thread(target=read_output, args=(process,), daemon=True).start()
-            
-            return process_id
+            return {
+                "id": process_id,
+                "pid": process.pid,
+                "program": program,
+                "args": args
+            }
         except Exception as e:
-            print(f"Fehler beim Starten des Prozesses: {str(e)}")
+            logging.error(f"Fehler beim Starten des Prozesses: {str(e)}")
             return None
     
-    def stopProcess(self, process_id):
+    def stop_process(self, process_id):
         """
         Stoppt einen Prozess anhand seiner ID.
         
@@ -109,16 +144,16 @@ class ProcessManager:
                 
                 # Aus der Liste entfernen
                 del self.processes[process_id]
-                print(f"Prozess {process_id} gestoppt")
+                logging.info(f"Prozess {process_id} gestoppt")
                 return True
             except Exception as e:
-                print(f"Fehler beim Stoppen des Prozesses {process_id}: {str(e)}")
+                logging.error(f"Fehler beim Stoppen des Prozesses {process_id}: {str(e)}")
                 return False
         else:
-            print(f"Prozess-ID {process_id} nicht gefunden")
+            logging.warning(f"Prozess-ID {process_id} nicht gefunden")
             return False
     
-    def killProcess(self, name):
+    def kill_process_by_name(self, name):
         """
         Beendet alle Prozesse mit dem angegebenen Namen.
         
@@ -133,25 +168,25 @@ class ProcessManager:
             if sys.platform == 'win32':
                 # Windows: taskkill
                 output = subprocess.check_output(['taskkill', '/F', '/IM', f"{name}.exe"], stderr=subprocess.STDOUT)
-                print(f"Prozesse beendet: {output.decode('utf-8', errors='replace')}")
+                logging.info(f"Prozesse beendet: {output.decode('utf-8', errors='replace')}")
                 count = 1  # Genaue Anzahl nicht bekannt
             else:
                 # Linux/Mac: killall
                 output = subprocess.check_output(['killall', '-9', name], stderr=subprocess.STDOUT)
-                print(f"Prozesse beendet: {output.decode('utf-8', errors='replace')}")
+                logging.info(f"Prozesse beendet: {output.decode('utf-8', errors='replace')}")
                 count = 1  # Genaue Anzahl nicht bekannt
         except subprocess.CalledProcessError as e:
             # Befehl fehlgeschlagen, wahrscheinlich kein Prozess gefunden
-            print(f"Keine Prozesse mit Namen '{name}' gefunden: {e.output.decode('utf-8', errors='replace')}")
+            logging.info(f"Keine Prozesse mit Namen '{name}' gefunden: {e.output.decode('utf-8', errors='replace')}")
         except Exception as e:
-            print(f"Fehler beim Beenden von Prozessen mit Namen '{name}': {str(e)}")
+            logging.error(f"Fehler beim Beenden von Prozessen mit Namen '{name}': {str(e)}")
         
         return count
 
-    def cleanupAllProcesses(self):
+    def cleanup_all_processes(self):
         """Beendet alle gestarteten Prozesse."""
         for process_id in list(self.processes.keys()):
-            self.stopProcess(process_id)
+            self.stop_process(process_id)
         
         # Sicherstellen, dass alle Prozesse beendet sind
         try:
@@ -166,561 +201,731 @@ class ProcessManager:
 
 
 class AgentController:
-    def __init__(self):
-        self.html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'agent_ui.html')
+    """
+    Controller für die Benutzeroberfläche, der Logging und Fortschrittsanzeigen integriert
+    sowie die Steuerung des Agenten und ngrok-Tunnels ermöglicht.
+    """
+    def __init__(self, root: tk.Tk, rag_manager: Optional[RAGManager] = None):
+        """
+        Initialisiert den Controller mit einem tkinter-Root-Fenster
+        
+        Args:
+            root: tkinter-Root-Fenster
+            rag_manager: Optional vorhandene RAGManager-Instanz
+        """
+        self.root = root
+        self.rag_manager = rag_manager
+        self.log_queue = queue.Queue()
+        self.progress_queue = queue.Queue()
+        self.stop_event = threading.Event()
+        
+        # Prozess-Manager für externe Prozesse
         self.process_manager = ProcessManager()
         
-        # Stelle sicher, dass die HTML-Datei existiert
-        if not os.path.exists(self.html_path):
-            self._create_html_file()
-    
-    def _create_html_file(self):
-        """Erstellt die HTML-Datei, falls sie nicht existiert."""
-        print("HTML-UI-Datei wird erstellt...")
+        # Server-Status
+        self.agent_process = None
+        self.ngrok_process = None
+        self.ngrok_url = None
         
-        html_content = """<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeContextAI Control Panel</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .status-online {
-            background-color: #27ae60;
-        }
-        .status-offline {
-            background-color: #e74c3c;
-        }
-        .card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .card h2 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            color: #2c3e50;
-        }
-        .action-button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        .action-button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        .action-button:hover:not(:disabled) {
-            background-color: #2980b9;
-        }
-        .action-button.danger {
-            background-color: #e74c3c;
-        }
-        .action-button.danger:hover:not(:disabled) {
-            background-color: #c0392b;
-        }
-        .action-button.success {
-            background-color: #27ae60;
-        }
-        .action-button.success:hover:not(:disabled) {
-            background-color: #219651;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .log-panel {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            border-radius: 4px;
-            padding: 15px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-            height: 200px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-        .log-entry {
-            margin: 5px 0;
-            line-height: 1.4;
-        }
-        .log-info {
-            color: #3498db;
-        }
-        .log-success {
-            color: #2ecc71;
-        }
-        .log-error {
-            color: #e74c3c;
-        }
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>CodeContextAI Controller</h1>
-        <div class="status-badge status-offline" id="agent-status">Offline</div>
-    </div>
-
-    <div class="card">
-        <h2>Agent Steuerung</h2>
-        <div class="button-group">
-            <button id="start-agent" class="action-button success">Agent starten</button>
-            <button id="stop-agent" class="action-button danger" disabled>Agent stoppen</button>
-        </div>
+        # Setup UI
+        self._setup_ui()
         
-        <div class="log-panel" id="log-panel">
-            <div class="log-entry">Bereit. Starten Sie den Agenten, um zu beginnen.</div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Ngrok Tunnel</h2>
-        <div id="tunnel-info">
-            <p>Kein aktiver Tunnel vorhanden.</p>
-        </div>
-        <div class="button-group">
-            <button id="start-tunnel" class="action-button success" disabled>Tunnel starten</button>
-            <button id="stop-tunnel" class="action-button danger" disabled>Tunnel stoppen</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Synchronisation</h2>
-        <p>Synchronisieren Sie das Projektverzeichnis mit dem Index.</p>
-        <div class="button-group">
-            <button id="sync-project" class="action-button" disabled>Jetzt synchronisieren</button>
-            <button id="rebuild-index" class="action-button danger" disabled>Index neu aufbauen</button>
-        </div>
-    </div>
-
-    <script>
-        // Status-Variablen
-        let agentRunning = false;
-        let tunnelRunning = false;
-        let agentProcess = null;
-        let tunnelProcess = null;
+        # Konfiguriere den Root-Logger, um unseren Queue-Handler zu verwenden
+        self._setup_logging()
         
-        // Elemente
-        const agentStatusBadge = document.getElementById('agent-status');
-        const startAgentBtn = document.getElementById('start-agent');
-        const stopAgentBtn = document.getElementById('stop-agent');
-        const logPanel = document.getElementById('log-panel');
+        # Verbinde mit dem globalen Progress-Tracker
+        self._override_progress_tracker()
         
-        const startTunnelBtn = document.getElementById('start-tunnel');
-        const stopTunnelBtn = document.getElementById('stop-tunnel');
-        const tunnelInfo = document.getElementById('tunnel-info');
+        # Starte Queue-Verarbeitung
+        self.root.after(100, self._process_log_queue)
+        self.root.after(100, self._process_progress_queue)
         
-        const syncProjectBtn = document.getElementById('sync-project');
-        const rebuildIndexBtn = document.getElementById('rebuild-index');
+        # Überprüfe Server-Status
+        self.root.after(1000, self._check_server_status)
         
-        // API URL
-        const API_URL = 'http://localhost:8000';
+    def _setup_ui(self):
+        """Erstellt die Benutzeroberfläche mit Logging-Fenster und Fortschrittsbalken"""
+        self.root.title("CodeContext AI Agent")
+        self.root.geometry("950x750")
+        self.root.minsize(800, 600)
         
-        // Helper
-        function logMessage(message, type = 'normal') {
-            const entry = document.createElement('div');
-            entry.className = `log-entry log-${type}`;
-            entry.textContent = message;
-            logPanel.appendChild(entry);
-            logPanel.scrollTop = logPanel.scrollHeight;
-        }
+        # Haupt-Frame mit Padding
+        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
         
-        function updateAgentStatus(running) {
-            agentRunning = running;
-            
-            if (running) {
-                agentStatusBadge.textContent = 'Online';
-                agentStatusBadge.className = 'status-badge status-online';
-                startAgentBtn.disabled = true;
-                stopAgentBtn.disabled = false;
-                startTunnelBtn.disabled = false;
-                syncProjectBtn.disabled = false;
-                rebuildIndexBtn.disabled = false;
-            } else {
-                agentStatusBadge.textContent = 'Offline';
-                agentStatusBadge.className = 'status-badge status-offline';
-                startAgentBtn.disabled = false;
-                stopAgentBtn.disabled = true;
-                startTunnelBtn.disabled = true;
-                stopTunnelBtn.disabled = true;
-                syncProjectBtn.disabled = true;
-                rebuildIndexBtn.disabled = true;
-            }
-        }
+        # Oberer Bereich mit Steuerungselementen
+        control_frame = ttk.LabelFrame(main_frame, text="Steuerung", padding="5")
+        control_frame.pack(fill=tk.X, pady=(0, 10))
         
-        function updateTunnelStatus(running, url = '') {
-            tunnelRunning = running;
-            
-            if (running && url) {
-                startTunnelBtn.disabled = true;
-                stopTunnelBtn.disabled = false;
-                tunnelInfo.innerHTML = `
-                    <p>Aktiver Tunnel:</p>
-                    <div style="background: #f1f1f1; padding: 10px; border-radius: 4px; font-family: monospace;">
-                        <a href="${url}" target="_blank">${url}</a>
-                    </div>
-                `;
-            } else {
-                startTunnelBtn.disabled = !agentRunning;
-                stopTunnelBtn.disabled = true;
-                tunnelInfo.innerHTML = '<p>Kein aktiver Tunnel vorhanden.</p>';
-            }
-        }
+        # Verzeichnis-Auswahl
+        dir_frame = ttk.Frame(control_frame)
+        dir_frame.pack(fill=tk.X, pady=5)
         
-        // API Funktionen
-        async function checkApiStatus() {
-            try {
-                const response = await fetch(`${API_URL}/`);
-                
-                if (response.ok) {
-                    updateAgentStatus(true);
-                    return true;
-                } else {
-                    updateAgentStatus(false);
-                    return false;
-                }
-            } catch (error) {
-                updateAgentStatus(false);
-                return false;
-            }
-        }
+        ttk.Label(dir_frame, text="Projektverzeichnis:").pack(side=tk.LEFT, padx=(0, 5))
+        self.dir_var = tk.StringVar(value=os.getenv("LOCAL_PROJECT_PATH", os.getcwd()))
+        dir_entry = ttk.Entry(dir_frame, textvariable=self.dir_var, width=50)
+        dir_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        // Event Listeners
-        startAgentBtn.addEventListener('click', async function() {
-            logMessage('Starte CodeContextAI Agent...', 'info');
-            
-            try {
-                // Starte den Agenten mit Python-Funktion
-                agentProcess = await pywebview.api.startProcess('uvicorn', ['main:app', '--host', '0.0.0.0', '--port', '8000']);
-                
-                // Warte kurz und prüfe den Status
-                setTimeout(async function() {
-                    const isRunning = await checkApiStatus();
-                    
-                    if (isRunning) {
-                        logMessage('Agent erfolgreich gestartet!', 'success');
-                    } else {
-                        logMessage('Agent konnte nicht gestartet werden.', 'error');
-                    }
-                }, 3000);
-                
-            } catch (error) {
-                logMessage(`Fehler beim Starten des Agenten: ${error}`, 'error');
-                updateAgentStatus(false);
-            }
-        });
+        browse_btn = ttk.Button(dir_frame, text="Durchsuchen...", command=self._browse_directory)
+        browse_btn.pack(side=tk.LEFT)
         
-        stopAgentBtn.addEventListener('click', async function() {
-            logMessage('Stoppe CodeContextAI Agent...', 'info');
-            
-            try {
-                if (tunnelRunning) {
-                    await pywebview.api.killProcess('ngrok');
-                    updateTunnelStatus(false);
-                }
-                
-                if (agentProcess) {
-                    await pywebview.api.stopProcess(agentProcess);
-                    agentProcess = null;
-                } else {
-                    await pywebview.api.killProcess('uvicorn');
-                }
-                
-                updateAgentStatus(false);
-                logMessage('Agent gestoppt.', 'success');
-            } catch (error) {
-                logMessage(`Fehler beim Stoppen des Agenten: ${error}`, 'error');
-            }
-        });
+        # Server-Status und Steuerung
+        server_frame = ttk.Frame(control_frame)
+        server_frame.pack(fill=tk.X, pady=5)
         
-        startTunnelBtn.addEventListener('click', async function() {
-            logMessage('Starte ngrok Tunnel...', 'info');
-            
-            try {
-                tunnelProcess = await pywebview.api.startProcess('ngrok', ['http', '8000']);
-                
-                // Warte kurz, dann hole die Tunnel-URL
-                setTimeout(async function() {
-                    try {
-                        const response = await fetch('http://localhost:4040/api/tunnels');
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.tunnels && data.tunnels.length > 0) {
-                                const httpsUrl = data.tunnels.find(tunnel => 
-                                    tunnel.public_url.startsWith('https://')
-                                )?.public_url;
-                                
-                                if (httpsUrl) {
-                                    updateTunnelStatus(true, httpsUrl);
-                                    logMessage(`Tunnel erfolgreich erstellt: ${httpsUrl}`, 'success');
-                                } else {
-                                    logMessage('Keine HTTPS-URL im Tunnel gefunden.', 'error');
-                                    updateTunnelStatus(false);
-                                }
-                            } else {
-                                logMessage('Keine Tunnel gefunden.', 'error');
-                                updateTunnelStatus(false);
-                            }
-                        } else {
-                            logMessage('Konnte Tunnel-Informationen nicht abrufen.', 'error');
-                            updateTunnelStatus(false);
-                        }
-                    } catch (error) {
-                        logMessage('Fehler beim Abrufen der Tunnel-URL.', 'error');
-                        updateTunnelStatus(true, 'Tunnel läuft, URL konnte nicht ermittelt werden');
-                    }
-                }, 2000);
-                
-            } catch (error) {
-                logMessage(`Fehler beim Starten des Tunnels: ${error}`, 'error');
-                updateTunnelStatus(false);
-            }
-        });
+        # Status-Anzeige
+        status_frame = ttk.Frame(server_frame)
+        status_frame.pack(side=tk.LEFT, fill=tk.Y)
         
-        stopTunnelBtn.addEventListener('click', async function() {
-            logMessage('Stoppe ngrok Tunnel...', 'info');
-            
-            try {
-                if (tunnelProcess) {
-                    await pywebview.api.stopProcess(tunnelProcess);
-                    tunnelProcess = null;
-                } else {
-                    await pywebview.api.killProcess('ngrok');
-                }
-                
-                updateTunnelStatus(false);
-                logMessage('Tunnel gestoppt.', 'success');
-            } catch (error) {
-                logMessage(`Fehler beim Stoppen des Tunnels: ${error}`, 'error');
-            }
-        });
+        ttk.Label(status_frame, text="Agent-Status:").pack(side=tk.LEFT, padx=(0, 5))
+        self.status_var = tk.StringVar(value="Offline")
+        status_label = ttk.Label(status_frame, textvariable=self.status_var, 
+                                  foreground="red", font=("TkDefaultFont", 10, "bold"))
+        status_label.pack(side=tk.LEFT, padx=(0, 10))
         
-        syncProjectBtn.addEventListener('click', async function() {
-            if (!agentRunning) return;
-            
-            logMessage('Starte Projektsynchronisation...', 'info');
-            
-            try {
-                const response = await fetch(`${API_URL}/sync?wait=true`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        const changedFiles = data.changed_files || [];
-                        logMessage(`Synchronisation abgeschlossen: ${changedFiles.length} Dateien geändert.`, 'success');
-                    } else {
-                        logMessage(`Synchronisation fehlgeschlagen: ${data.message}`, 'error');
-                    }
-                } else {
-                    logMessage('Synchronisation fehlgeschlagen: API-Fehler', 'error');
-                }
-            } catch (error) {
-                logMessage(`Fehler bei der Synchronisation: ${error}`, 'error');
-            }
-        });
+        # Server-Steuerung
+        self.start_server_btn = ttk.Button(server_frame, text="Agent starten", 
+                                           command=self._start_server)
+        self.start_server_btn.pack(side=tk.LEFT, padx=(0, 5))
         
-        rebuildIndexBtn.addEventListener('click', async function() {
-            if (!agentRunning) return;
-            
-            if (!confirm('Soll der Index wirklich komplett neu aufgebaut werden? Dies kann bei großen Projekten einige Zeit dauern.')) {
-                return;
-            }
-            
-            logMessage('Starte kompletten Neuaufbau des Index...', 'info');
-            
-            try {
-                const response = await fetch(`${API_URL}/rebuild?wait=true`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        force_rebuild: true
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        logMessage(`Index-Neuaufbau abgeschlossen: ${data.chunks_processed || 0} Chunks verarbeitet.`, 'success');
-                    } else {
-                        logMessage(`Index-Neuaufbau fehlgeschlagen: ${data.message}`, 'error');
-                    }
-                } else {
-                    logMessage('Index-Neuaufbau fehlgeschlagen: API-Fehler', 'error');
-                }
-            } catch (error) {
-                logMessage(`Fehler beim Index-Neuaufbau: ${error}`, 'error');
-            }
-        });
+        self.stop_server_btn = ttk.Button(server_frame, text="Agent stoppen", 
+                                          command=self._stop_server, state=tk.DISABLED)
+        self.stop_server_btn.pack(side=tk.LEFT, padx=(0, 5))
         
-        // Initialisierung
-        async function initialize() {
-            logMessage('Prüfe API-Status...', 'info');
-            const isRunning = await checkApiStatus();
-            
-            if (isRunning) {
-                logMessage('Agent bereits gestartet.', 'success');
-                
-                // Prüfe, ob ein Tunnel läuft
-                try {
-                    const response = await fetch('http://localhost:4040/api/tunnels');
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.tunnels && data.tunnels.length > 0) {
-                            const httpsUrl = data.tunnels.find(tunnel => 
-                                tunnel.public_url.startsWith('https://')
-                            )?.public_url;
-                            
-                            if (httpsUrl) {
-                                updateTunnelStatus(true, httpsUrl);
-                                logMessage(`Aktiver Tunnel gefunden: ${httpsUrl}`, 'success');
-                            }
-                        }
-                    }
-                } catch (error) {
-                    // Kein Tunnel aktiv, ignorieren
-                }
-            } else {
-                logMessage('Agent ist nicht gestartet. Verwenden Sie den "Agent starten" Button.', 'info');
-            }
-        }
+        # Ngrok Tunnel
+        tunnel_frame = ttk.Frame(control_frame)
+        tunnel_frame.pack(fill=tk.X, pady=5)
         
-        // Führe Initialisierung aus, wenn DOM geladen ist
-        document.addEventListener('DOMContentLoaded', initialize);
+        ttk.Label(tunnel_frame, text="Ngrok-Tunnel:").pack(side=tk.LEFT, padx=(0, 5))
+        self.tunnel_var = tk.StringVar(value="Nicht aktiv")
+        tunnel_label = ttk.Label(tunnel_frame, textvariable=self.tunnel_var)
+        tunnel_label.pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
         
-        // Prüfe regelmäßig den Status
-        setInterval(checkApiStatus, 5000);
+        self.start_tunnel_btn = ttk.Button(tunnel_frame, text="Tunnel starten", 
+                                          command=self._start_tunnel, state=tk.DISABLED)
+        self.start_tunnel_btn.pack(side=tk.LEFT, padx=(0, 5))
         
-        // Log, dass das UI geladen wurde
-        logMessage('UI geladen und bereit.', 'info');
-    </script>
-</body>
-</html>"""
+        self.stop_tunnel_btn = ttk.Button(tunnel_frame, text="Tunnel stoppen", 
+                                         command=self._stop_tunnel, state=tk.DISABLED)
+        self.stop_tunnel_btn.pack(side=tk.LEFT)
         
-        # Speichern der HTML-Datei
-        with open(self.html_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
+        # Aktions-Buttons
+        actions_frame = ttk.LabelFrame(main_frame, text="Aktionen", padding="5")
+        actions_frame.pack(fill=tk.X, pady=(0, 10))
         
-        print(f"HTML-UI-Datei erstellt unter: {self.html_path}")
-    
-    def run(self):
-        """Startet die Anwendung."""
-        # Erstelle das Webview-Fenster erst hier für bessere Kompatibilität
-        window = webview.create_window(
-            'CodeContextAI Controller',
-            self.html_path,
-            js_api=self.process_manager,
-            width=900,
-            height=800,
-            min_size=(800, 600)
+        # Buttons Frame
+        buttons_frame = ttk.Frame(actions_frame)
+        buttons_frame.pack(fill=tk.X, pady=5)
+        
+        self.scan_btn = ttk.Button(buttons_frame, text="Verzeichnis scannen", command=self._scan_directory)
+        self.scan_btn.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.build_btn = ttk.Button(buttons_frame, text="Index aufbauen", command=self._build_index)
+        self.build_btn.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.sync_btn = ttk.Button(buttons_frame, text="Synchronisieren", command=self._sync_directory)
+        self.sync_btn.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Auto-Sync Optionen
+        self.auto_sync_var = tk.BooleanVar(value=False)
+        auto_sync_check = ttk.Checkbutton(
+            buttons_frame, 
+            text="Auto-Sync", 
+            variable=self.auto_sync_var,
+            command=self._toggle_auto_sync
         )
+        auto_sync_check.pack(side=tk.LEFT, padx=(20, 5))
         
-        def clean_up():
-            print("Anwendung wird beendet, stoppe alle Prozesse...")
-            self.process_manager.cleanupAllProcesses()
+        ttk.Label(buttons_frame, text="Intervall (s):").pack(side=tk.LEFT)
+        
+        self.interval_var = tk.StringVar(value="90")
+        interval_entry = ttk.Entry(buttons_frame, textvariable=self.interval_var, width=5)
+        interval_entry.pack(side=tk.LEFT, padx=(5, 5))
+        
+        # Fortschrittsanzeige - Universeller Fortschrittsbalken
+        progress_frame = ttk.LabelFrame(main_frame, text="Fortschritt", padding="5")
+        progress_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Fortschrittsbeschreibung
+        self.progress_desc_var = tk.StringVar(value="Bereit")
+        progress_desc = ttk.Label(progress_frame, textvariable=self.progress_desc_var)
+        progress_desc.pack(fill=tk.X, anchor=tk.W)
+        
+        # Fortschrittsbalken
+        self.progress_bar = ttk.Progressbar(progress_frame, mode="determinate", length=100)
+        self.progress_bar.pack(fill=tk.X, pady=(5, 0))
+        
+        # Fortschrittsdetails
+        self.progress_details_var = tk.StringVar(value="")
+        progress_details = ttk.Label(progress_frame, textvariable=self.progress_details_var)
+        progress_details.pack(fill=tk.X, anchor=tk.W, pady=(5, 0))
+        
+        # Logging-Bereich
+        log_frame = ttk.LabelFrame(main_frame, text="Logging", padding="5")
+        log_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Text-Widget für Logs mit Scrollbar
+        self.log_text = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, width=80, height=20)
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_text.config(state=tk.DISABLED)  # Schreibgeschützt
+        
+        # Farb-Tags für verschiedene Log-Level definieren
+        self.log_text.tag_config('DEBUG', foreground='gray')
+        self.log_text.tag_config('INFO', foreground='green')
+        self.log_text.tag_config('WARNING', foreground='orange')
+        self.log_text.tag_config('ERROR', foreground='red')
+        self.log_text.tag_config('CRITICAL', foreground='red', background='yellow')
+        
+        # Status-Leiste
+        self.action_status_var = tk.StringVar(value="Bereit")
+        status_bar = ttk.Label(self.root, textvariable=self.action_status_var, relief=tk.SUNKEN, anchor=tk.W)
+        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+    def _browse_directory(self):
+        """Öffnet einen Dialog zur Verzeichnisauswahl"""
+        directory = filedialog.askdirectory(initialdir=self.dir_var.get())
+        if directory:
+            self.dir_var.set(directory)
+    
+    def _start_server(self):
+        """Startet den FastAPI-Server mit uvicorn"""
+        try:
+            project_directory = self.dir_var.get()
+            if not os.path.exists(project_directory):
+                messagebox.showerror("Fehler", f"Verzeichnis {project_directory} existiert nicht.")
+                return
             
-        # Verwende das on_closing-Event, wenn verfügbar
-        try:
-            window.events.closing += clean_up
-            print("Event-Handler für Fenster-Schließen registriert")
-        except AttributeError:
-            print("Fenster-Schließen-Event nicht verfügbar, verwende alternativen Ansatz")
+            # Agent-Verzeichnis (wo die main.py ist)
+            agent_directory = os.path.dirname(os.path.abspath(__file__))
+            if os.path.basename(agent_directory) == "app":
+                # Falls agent_controller.py in einem app/ Unterverzeichnis ist
+                agent_directory = os.path.dirname(agent_directory)
+                
+            # Prüfen, ob die main.py existiert
+            main_path = os.path.join(agent_directory, "main.py")
+            if not os.path.exists(main_path):
+                messagebox.showerror("Fehler", f"main.py nicht gefunden in {agent_directory}")
+                return
+            
+            # .env-Datei aktualisieren oder erstellen im Agent-Verzeichnis
+            self._update_env_file(agent_directory, project_directory)
+            
+            # Server starten im Agent-Verzeichnis
+            logging.info(f"Starte FastAPI-Server für Projekt: {project_directory}")
+            self.action_status_var.set("Starte Server...")
+            
+            # Ausführen im Agent-Verzeichnis
+            self.agent_process = self.process_manager.start_process(
+                "uvicorn", 
+                ["main:app", "--host", "0.0.0.0", "--port", "8000"],
+                cwd=agent_directory
+            )
+            
+            # UI aktualisieren
+            self._update_server_status(checking=True)
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Starten des Servers: {str(e)}")
+            self.action_status_var.set(f"Fehler: {str(e)}")
+            
+    def _update_env_file(self, agent_directory, project_directory):
+        """
+        Aktualisiert oder erstellt die .env-Datei mit dem ausgewählten Projektpfad
         
-        # Starte das Webview mit Cleanup bei Beendigung
+        Args:
+            agent_directory: Pfad zum Agent-Verzeichnis
+            project_directory: Pfad zum zu analysierenden Projektverzeichnis
+        """
+        env_path = os.path.join(agent_directory, ".env")
+        env_vars = {}
+        
+        # Bestehende Umgebungsvariablen einlesen, falls Datei existiert
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as file:
+                    for line in file:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            key, value = line.split('=', 1)
+                            env_vars[key.strip()] = value.strip()
+                logging.info(f"Bestehende .env-Datei eingelesen: {list(env_vars.keys())}")
+            except Exception as e:
+                logging.warning(f"Fehler beim Lesen der .env-Datei: {str(e)}")
+        
+        # LOCAL_PROJECT_PATH aktualisieren
+        env_vars['LOCAL_PROJECT_PATH'] = project_directory
+        
+        # Datei schreiben
         try:
-            webview.start(debug=True)
-        finally:
-            # Stelle sicher, dass Prozesse bereinigt werden, auch wenn kein Event verfügbar ist
-            clean_up()
-
-
-def main():
-    # Stelle sicher, dass die erforderlichen Abhängigkeiten installiert sind
-    try:
-        import webview
-    except ImportError:
-        print("Fehler: Das Modul 'webview' ist nicht installiert.")
-        print("Bitte installieren Sie es mit 'pip install pywebview'.")
-        return
+            with open(env_path, 'w', encoding='utf-8') as file:
+                for key, value in env_vars.items():
+                    file.write(f"{key}={value}\n")
+            logging.info(f"LOCAL_PROJECT_PATH in .env-Datei aktualisiert: {project_directory}")
+        except Exception as e:
+            logging.error(f"Fehler beim Schreiben der .env-Datei: {str(e)}")
     
-    # Prüfe, ob uvicorn und ngrok verfügbar sind
-    try:
-        if sys.platform == 'win32':
-            # Windows: where Befehl
-            subprocess.check_output(['where', 'uvicorn'], stderr=subprocess.STDOUT)
-            subprocess.check_output(['where', 'ngrok'], stderr=subprocess.STDOUT)
+    def _stop_server(self):
+        """Stoppt den FastAPI-Server"""
+        try:
+            logging.info("Stoppe FastAPI-Server")
+            self.action_status_var.set("Stoppe Server...")
+            
+            # Zuerst Tunnel stoppen, falls aktiv
+            if self.ngrok_process:
+                self._stop_tunnel()
+            
+            # Server stoppen
+            if self.agent_process:
+                self.process_manager.stop_process(self.agent_process["id"])
+                self.agent_process = None
+            else:
+                # Fallback: Versuche, uvicorn direkt zu beenden
+                self.process_manager.kill_process_by_name("uvicorn")
+                
+            # UI aktualisieren
+            self._update_server_status(is_running=False)
+            self.action_status_var.set("Server gestoppt")
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Stoppen des Servers: {str(e)}")
+            self.action_status_var.set(f"Fehler: {str(e)}")
+    
+    def _start_tunnel(self):
+        """Startet einen ngrok-Tunnel zum FastAPI-Server"""
+        try:
+            logging.info("Starte ngrok-Tunnel")
+            self.action_status_var.set("Starte Tunnel...")
+            
+            # Tunnel starten
+            self.ngrok_process = self.process_manager.start_process("ngrok", ["http", "8000"])
+            
+            # Warte kurz und hole dann die URL
+            self.root.after(2000, self._get_tunnel_url)
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Starten des Tunnels: {str(e)}")
+            self.action_status_var.set(f"Fehler: {str(e)}")
+    
+    def _get_tunnel_url(self):
+        """Holt die öffentliche URL vom ngrok-Tunnel"""
+        try:
+            # ngrok API abfragen
+            response = requests.get("http://localhost:4040/api/tunnels")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("tunnels"):
+                    # Suche nach einer HTTPS-URL
+                    https_url = None
+                    for tunnel in data["tunnels"]:
+                        url = tunnel.get("public_url", "")
+                        if url.startswith("https://"):
+                            https_url = url
+                            break
+                    
+                    if https_url:
+                        self.ngrok_url = https_url
+                        logging.info(f"Ngrok-Tunnel erstellt: {https_url}")
+                        self.tunnel_var.set(https_url)
+                        self.action_status_var.set(f"Tunnel aktiv: {https_url}")
+                        self.stop_tunnel_btn.config(state=tk.NORMAL)
+                        return
+            
+            # Wenn wir hier ankommen, wurde kein Tunnel gefunden
+            logging.warning("Konnte keine ngrok-Tunnel-URL ermitteln")
+            self.action_status_var.set("Tunnel-URL konnte nicht ermittelt werden")
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Abrufen der Tunnel-URL: {str(e)}")
+            self.action_status_var.set(f"Fehler bei Tunnel-URL: {str(e)}")
+    
+    def _stop_tunnel(self):
+        """Stoppt den ngrok-Tunnel"""
+        try:
+            logging.info("Stoppe ngrok-Tunnel")
+            self.action_status_var.set("Stoppe Tunnel...")
+            
+            # Tunnel stoppen
+            if self.ngrok_process:
+                self.process_manager.stop_process(self.ngrok_process["id"])
+                self.ngrok_process = None
+            else:
+                # Fallback: Versuche, ngrok direkt zu beenden
+                self.process_manager.kill_process_by_name("ngrok")
+            
+            # UI aktualisieren
+            self.ngrok_url = None
+            self.tunnel_var.set("Nicht aktiv")
+            self.start_tunnel_btn.config(state=tk.NORMAL)
+            self.stop_tunnel_btn.config(state=tk.DISABLED)
+            self.action_status_var.set("Tunnel gestoppt")
+            
+        except Exception as e:
+            logging.error(f"Fehler beim Stoppen des Tunnels: {str(e)}")
+            self.action_status_var.set(f"Fehler: {str(e)}")
+    
+    def _check_server_status(self):
+        """Überprüft den Status des FastAPI-Servers"""
+        self._update_server_status()
+        
+        # Regelmäßige Überprüfung
+        if not self.stop_event.is_set():
+            self.root.after(5000, self._check_server_status)
+    
+    def _update_server_status(self, is_running=None, checking=False):
+        """
+        Aktualisiert die Server-Status-Anzeige
+        
+        Args:
+            is_running: Optional vorgegebener Status (sonst wird geprüft)
+            checking: Ob gerade eine Statusüberprüfung läuft
+        """
+        if checking:
+            self.status_var.set("Prüfe...")
+            self.root.update_idletasks()
+            return
+            
+        # Status prüfen, wenn nicht vorgegeben
+        if is_running is None:
+            is_running = self._is_server_running()
+        
+        # UI aktualisieren
+        if is_running:
+            self.status_var.set("Online")
+            # Direkter Zugriff auf das Label, ohne trace_vinfo
+            for widget in self.root.winfo_children():
+                if isinstance(widget, ttk.Label) and widget.cget("textvariable") == str(self.status_var):
+                    widget.config(foreground="green")
+                    break
+            self.start_server_btn.config(state=tk.DISABLED)
+            self.stop_server_btn.config(state=tk.NORMAL)
+            self.start_tunnel_btn.config(state=tk.NORMAL)
         else:
-            # Linux/Mac: which Befehl
-            subprocess.check_output(['which', 'uvicorn'], stderr=subprocess.STDOUT)
-            subprocess.check_output(['which', 'ngrok'], stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError:
-        print("Fehler: 'uvicorn' oder 'ngrok' wurden nicht gefunden.")
-        print("Bitte stellen Sie sicher, dass beide Programme installiert sind und im PATH verfügbar sind.")
-        print("Installation:")
-        print("  uvicorn: pip install uvicorn")
-        print("  ngrok: Herunterladen von https://ngrok.com/download und im PATH platzieren")
-        return
+            self.status_var.set("Offline")
+            # Direkter Zugriff auf das Label, ohne trace_vinfo
+            for widget in self.root.winfo_children():
+                if isinstance(widget, ttk.Label) and widget.cget("textvariable") == str(self.status_var):
+                    widget.config(foreground="red")
+                    break
+            self.start_server_btn.config(state=tk.NORMAL)
+            self.stop_server_btn.config(state=tk.DISABLED)
+            self.start_tunnel_btn.config(state=tk.DISABLED)
+            self.stop_tunnel_btn.config(state=tk.DISABLED)
+            
+            # Tunnel-Status zurücksetzen
+            if self.ngrok_url:
+                self.ngrok_url = None
+                self.tunnel_var.set("Nicht aktiv")
     
-    # Starte den Controller
-    controller = AgentController()
-    controller.run()
+    def _is_server_running(self):
+        """
+        Überprüft, ob der FastAPI-Server läuft
+        
+        Returns:
+            True wenn Server erreichbar, sonst False
+        """
+        try:
+            response = requests.get("http://localhost:8000/", timeout=1)
+            return response.status_code == 200
+        except:
+            return False
+    
+    def _scan_directory(self):
+        """Scannt das ausgewählte Verzeichnis"""
+        directory = self.dir_var.get()
+        if not os.path.exists(directory):
+            messagebox.showerror("Fehler", f"Verzeichnis {directory} existiert nicht.")
+            return
+            
+        self.action_status_var.set(f"Scanne Verzeichnis {directory}...")
+        self._run_in_thread(self._scan_directory_task)
+        
+    def _scan_directory_task(self):
+        """Task zum Scannen des Verzeichnisses im Hintergrund"""
+        try:
+            project_directory = self.dir_var.get()
+            logging.info(f"Starte Verzeichnisscan für {project_directory}")
+            
+            # Projekt-Hash für Datendirektion berechnen
+            project_hash = self._get_project_hash(project_directory)
+            # Agent-Verzeichnis ermitteln
+            agent_directory = os.path.dirname(os.path.abspath(__file__))
+            if os.path.basename(agent_directory) == "app":
+                agent_directory = os.path.dirname(agent_directory)
+                
+            # Projektspezifisches Datenverzeichnis
+            data_dir = os.path.join(agent_directory, "data", project_hash)
+            os.makedirs(data_dir, exist_ok=True)
+            
+            # RAG-Manager initialisieren, falls noch nicht geschehen
+            if self.rag_manager is None or self.rag_manager.local_path != project_directory:
+                self.rag_manager = RAGManager(
+                    local_path=project_directory,
+                    auto_sync=self.auto_sync_var.get(),
+                    sync_interval=int(self.interval_var.get()),
+                    index_file=os.path.join(data_dir, "index.faiss"),
+                    meta_file=os.path.join(data_dir, "metadata.pkl"),
+                    hash_file=os.path.join(data_dir, "file_hashes.json"),
+                    chunk_hashes_file=os.path.join(data_dir, "chunk_hashes.pkl"),
+                    dependency_graph_file=os.path.join(data_dir, "dependency_graph.json")
+                )
+            
+            # Verzeichnisstruktur abrufen
+            self.rag_manager.get_file_structure(force_refresh=True)
+            
+            # UI aktualisieren
+            self.root.after(0, lambda: self.action_status_var.set(f"Verzeichnisscan abgeschlossen"))
+        except Exception as e:
+            logging.error(f"Fehler beim Scannen des Verzeichnisses: {str(e)}")
+            self.root.after(0, lambda: self.action_status_var.set(f"Fehler: {str(e)}"))
+            
+    def _build_index(self):
+        """Baut den Index auf"""
+        directory = self.dir_var.get()
+        if not os.path.exists(directory):
+            messagebox.showerror("Fehler", f"Verzeichnis {directory} existiert nicht.")
+            return
+            
+        # Sicherheitsabfrage für Neuaufbau
+        if messagebox.askyesno("Index neu aufbauen", 
+                              "Möchten Sie wirklich den Index komplett neu aufbauen?\n"
+                              "Dies kann bei großen Projekten einige Zeit dauern."):
+            self.action_status_var.set("Baue Index neu auf...")
+            self._run_in_thread(self._build_index_task)
+        
+    def _build_index_task(self):
+        """Task zum Aufbau des Index im Hintergrund"""
+        try:
+            directory = self.dir_var.get()
+            logging.info(f"Starte kompletten Index-Neuaufbau für {directory}")
+            
+            # RAG-Manager initialisieren, falls noch nicht geschehen
+            if self.rag_manager is None or self.rag_manager.local_path != directory:
+                self.rag_manager = RAGManager(
+                    local_path=directory,
+                    auto_sync=self.auto_sync_var.get(),
+                    sync_interval=int(self.interval_var.get())
+                )
+            
+            # Index aufbauen
+            result = self.rag_manager.build_index()
+            
+            # UI aktualisieren
+            if result.get("status") == "success":
+                message = f"Index aufgebaut: {result.get('chunks_processed', 0)} Chunks in {result.get('time_taken', 0)}s"
+            else:
+                message = f"Fehler: {result.get('message', 'Unbekannter Fehler')}"
+                
+            self.root.after(0, lambda: self.action_status_var.set(message))
+        except Exception as e:
+            logging.error(f"Fehler beim Aufbau des Index: {str(e)}")
+            self.root.after(0, lambda: self.action_status_var.set(f"Fehler: {str(e)}"))
+            
+    def _sync_directory(self):
+        """Synchronisiert das Verzeichnis mit dem Index"""
+        if self.rag_manager is None:
+            messagebox.showinfo("Info", "Bitte zuerst den Index aufbauen.")
+            return
+            
+        self.action_status_var.set("Synchronisiere Verzeichnis...")
+        self._run_in_thread(self._sync_directory_task)
+        
+    def _sync_directory_task(self):
+        """Task zur Synchronisierung im Hintergrund"""
+        try:
+            logging.info("Starte Verzeichnissynchronisierung")
+            
+            # Synchronisieren
+            result = self.rag_manager.sync_directory()
+            
+            # UI aktualisieren
+            if result.get("status") == "success":
+                changed_files = len(result.get("changed_files", []))
+                time_taken = result.get("execution_time_seconds", 0)
+                message = f"Synchronisierung abgeschlossen: {changed_files} Dateien aktualisiert in {time_taken:.2f}s"
+            else:
+                message = f"Fehler: {result.get('message', 'Unbekannter Fehler')}"
+                
+            self.root.after(0, lambda: self.action_status_var.set(message))
+        except Exception as e:
+            logging.error(f"Fehler bei der Synchronisierung: {str(e)}")
+            self.root.after(0, lambda: self.action_status_var.set(f"Fehler: {str(e)}"))
+            
+    def _toggle_auto_sync(self):
+        """Schaltet Auto-Sync ein oder aus"""
+        if self.rag_manager is None:
+            if self.auto_sync_var.get():
+                messagebox.showinfo("Info", "Bitte zuerst den Index aufbauen.")
+                self.auto_sync_var.set(False)
+            return
+            
+        try:
+            auto_sync = self.auto_sync_var.get()
+            interval = int(self.interval_var.get())
+            
+            if auto_sync:
+                self.rag_manager.auto_sync = True
+                self.rag_manager.sync_interval = interval
+                self.rag_manager.start_auto_sync()
+                logging.info(f"Auto-Sync aktiviert (Intervall: {interval}s)")
+            else:
+                self.rag_manager.stop_auto_sync()
+                self.rag_manager.auto_sync = False
+                logging.info("Auto-Sync deaktiviert")
+                
+            self.action_status_var.set(f"Auto-Sync {'aktiviert' if auto_sync else 'deaktiviert'}")
+        except Exception as e:
+            logging.error(f"Fehler beim Ändern des Auto-Sync-Status: {str(e)}")
+            self.action_status_var.set(f"Fehler: {str(e)}")
+    
+    def _setup_logging(self):
+        """Konfiguriert das Logging für die Anzeige in der UI"""
+        # Handler für unsere Queue erstellen
+        handler = QueueHandler(self.log_queue)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        
+        # Zum Root-Logger hinzufügen
+        root_logger = logging.getLogger()
+        root_logger.addHandler(handler)
+        
+        # Sicherstellen, dass wir alle Nachrichten bekommen
+        if not root_logger.handlers:
+            root_logger.setLevel(logging.INFO)
+            
+        # Initiale Nachricht
+        logging.info("Logging-System initialisiert")
+        
+    def _override_progress_tracker(self):
+        """Überschreibt die update-Methoden des globalen ProgressTrackers"""
+        original_start = progress.start
+        original_update = progress.update
+        original_finish = progress.finish
+        
+        # Wrapper-Funktionen, die den originalen Aufruf durchführen und unsere Queue informieren
+        def start_wrapper(*args, **kwargs):
+            result = original_start(*args, **kwargs)
+            # Extrahiere Informationen und sende an die Queue
+            total = progress.total
+            desc = progress.desc
+            unit = progress.unit
+            self.progress_queue.put(("start", desc, total, unit))
+            return result
+            
+        def update_wrapper(*args, **kwargs):
+            result = original_update(*args, **kwargs)
+            # Aktuellen Fortschritt berechnen und senden
+            if progress.pbar:
+                value = progress.pbar.n
+                total = progress.pbar.total
+                self.progress_queue.put(("update", value, total))
+            return result
+            
+        def finish_wrapper(*args, **kwargs):
+            message = args[0] if args else ""
+            result = original_finish(*args, **kwargs)
+            # Fertigstellung signalisieren
+            self.progress_queue.put(("finish", message))
+            return result
+            
+        # Ersetze die Original-Methoden
+        progress.start = start_wrapper
+        progress.update = update_wrapper
+        progress.finish = finish_wrapper
+        
+    def _process_log_queue(self):
+        """Verarbeitet die Log-Queue und zeigt Nachrichten in der UI an"""
+        try:
+            while not self.log_queue.empty():
+                record = self.log_queue.get(block=False)
+                self._display_log(record)
+        except queue.Empty:
+            pass
+        
+        # Nächsten Verarbeitungszyklus planen, wenn nicht gestoppt
+        if not self.stop_event.is_set():
+            self.root.after(100, self._process_log_queue)
+            
+    def _process_progress_queue(self):
+        """Verarbeitet die Fortschritts-Queue und aktualisiert die Fortschrittsanzeige"""
+        try:
+            while not self.progress_queue.empty():
+                event = self.progress_queue.get(block=False)
+                self._update_progress_display(event)
+        except queue.Empty:
+            pass
+        
+        # Nächsten Verarbeitungszyklus planen, wenn nicht gestoppt
+        if not self.stop_event.is_set():
+            self.root.after(100, self._process_progress_queue)
+            
+    def _display_log(self, record):
+        """Zeigt einen Log-Eintrag im Text-Widget an"""
+        msg = self.format_log_record(record)
+        level = record.levelname
+        
+        self.log_text.config(state=tk.NORMAL)
+        self.log_text.insert(tk.END, msg + '\n', level)
+        self.log_text.see(tk.END)  # Automatisch zum Ende scrollen
+        self.log_text.config(state=tk.DISABLED)
+        
+    def format_log_record(self, record):
+        """Formatiert einen Log-Eintrag für die Anzeige"""
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        return formatter.format(record)
+        
+    def _update_progress_display(self, event):
+        """Aktualisiert die Fortschrittsanzeige basierend auf dem Event"""
+        event_type = event[0]
+        
+        if event_type == "start":
+            _, desc, total, unit = event
+            self.progress_desc_var.set(desc)
+            self.progress_bar["maximum"] = total
+            self.progress_bar["value"] = 0
+            self.progress_details_var.set(f"0/{total} {unit}")
+            
+        elif event_type == "update":
+            _, value, total = event
+            self.progress_bar["value"] = value
+            percent = int((value / total) * 100) if total > 0 else 0
+            self.progress_details_var.set(f"{value}/{total} ({percent}%)")
+            
+        elif event_type == "finish":
+            _, message = event
+            self.progress_desc_var.set("Abgeschlossen")
+            self.progress_bar["value"] = self.progress_bar["maximum"]
+            self.progress_details_var.set(message)
+            
+    def _run_in_thread(self, task_func):
+        """Führt eine Funktion in einem separaten Thread aus"""
+        thread = threading.Thread(target=task_func)
+        thread.daemon = True
+        thread.start()
+        
+    def stop(self):
+        """Stoppt den Controller und alle laufenden Prozesse"""
+        self.stop_event.set()
+        if self.rag_manager and self.rag_manager.auto_sync:
+            self.rag_manager.stop_auto_sync()
+            
+        # Alle externen Prozesse beenden
+        self.process_manager.cleanup_all_processes()
+        
+        logging.info("Controller und alle Prozesse gestoppt")
 
 
+# Hauptfunktion zum Starten der Anwendung
+def main():
+    root = tk.Tk()
+    app = AgentController(root)
+    
+    # Event-Handler für das Schließen des Fensters
+    def on_closing():
+        app.stop()
+        root.destroy()
+        
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    root.mainloop()
+    
 if __name__ == "__main__":
     main()
