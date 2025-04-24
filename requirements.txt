@@ -1,0 +1,11 @@
+# Projektanforderungen hier eintragen
+fastapi>=0.100.0
+uvicorn>=0.20.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+numpy>=1.20.0
+faiss-cpu>=1.7.0
+sentence-transformers>=2.2.0
+watchdog>=3.0.0
+python-multipart>=0.0.5
+pygments>=2.10.0

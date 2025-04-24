@@ -1,0 +1,15 @@
+.venv
+dependency_graph.json
+file_hashes.json
+index.file_hashes
+index.faiss
+chunk_hashes.pkl
+metadata.pkl
+.vscode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+.env
