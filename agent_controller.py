@@ -953,8 +953,8 @@ class AgentController:
             print("Anwendung wird beendet, stoppe alle Prozesse...")
             self.process_manager.cleanupAllProcesses()
         
-        self.window.closing += on_closing
-        
+        self.window.events.closed += on_closing
+                
         # Starte das Webview
         webview.start(debug=True)
 

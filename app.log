@@ -11835,3 +11835,121 @@ AssertionError
 2025-04-24 15:13:16 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.04s)
 2025-04-24 15:13:16 - root - INFO - Keine Änderungen gefunden (Scan in 0.04s) (Ausgeführt in 0.03 Sekunden)
 2025-04-24 15:13:16 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:15:19 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-04-24 15:15:19 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-04-24 15:15:19 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-04-24 15:15:23 - app.rag_manager - INFO - Initialisiere RAGManager für Verzeichnis: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:23 - app.rag_manager - INFO - Absoluter Pfad: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:23 - app.rag_manager - INFO - Initialisiere Preprocessor...
+2025-04-24 15:15:23 - app.preprocessor - INFO - Preprocessor initialized for: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:23 - app.rag_manager - INFO - Initialisiere Embedding Manager...
+2025-04-24 15:15:23 - app.embedding_manager - INFO - Lade SentenceTransformer-Modell 'all-MiniLM-L6-v2'...
+2025-04-24 15:15:23 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-24 15:15:23 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-24 15:15:25 - root - INFO - Modell 'all-MiniLM-L6-v2' erfolgreich geladen (Ausgeführt in 1.91 Sekunden)
+2025-04-24 15:15:25 - app.embedding_manager - INFO - Lade bestehenden FAISS-Index aus index.faiss...
+2025-04-24 15:15:25 - app.embedding_manager - INFO - Lade Metadaten aus metadata.pkl...
+2025-04-24 15:15:25 - app.embedding_manager - INFO - Lade Chunk-Hashes aus chunk_hashes.pkl (falls vorhanden)...
+2025-04-24 15:15:26 - app.embedding_manager - INFO - Index mit 50379 Einträgen erfolgreich geladen.
+2025-04-24 15:15:26 - root - INFO - FAISS-Index mit 50379 Vektoren geladen (Ausgeführt in 0.14 Sekunden)
+2025-04-24 15:15:26 - app.rag_manager - INFO - Initialisiere Dependency Graph Builder...
+2025-04-24 15:15:26 - app.dependency_graph_builder - INFO - DependencyGraphBuilder initialisiert für: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:26 - app.rag_manager - INFO - Initialisiere Change Analyzer und Local Scan Manager...
+2025-04-24 15:15:26 - app.local_scan_manager - INFO - Loaded hashes for 54 files
+2025-04-24 15:15:26 - app.rag_manager - INFO - Aktiviere automatische Synchronisierung (Intervall: 270s)
+2025-04-24 15:15:26 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:26 - app.rag_manager - INFO - Automatische Synchronisierung gestartet (Intervall: 270s)
+2025-04-24 15:15:26 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:26 - main - INFO - Application started, checking index and dependency graph...
+2025-04-24 15:15:26 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:27 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-04-24 15:15:27 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-04-24 15:15:27 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-04-24 15:15:31 - app.rag_manager - INFO - Initialisiere RAGManager für Verzeichnis: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:31 - app.rag_manager - INFO - Absoluter Pfad: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:31 - app.rag_manager - INFO - Initialisiere Preprocessor...
+2025-04-24 15:15:31 - app.preprocessor - INFO - Preprocessor initialized for: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:31 - app.rag_manager - INFO - Initialisiere Embedding Manager...
+2025-04-24 15:15:31 - app.embedding_manager - INFO - Lade SentenceTransformer-Modell 'all-MiniLM-L6-v2'...
+2025-04-24 15:15:31 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-24 15:15:31 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-24 15:15:33 - root - INFO - Modell 'all-MiniLM-L6-v2' erfolgreich geladen (Ausgeführt in 1.48 Sekunden)
+2025-04-24 15:15:33 - app.embedding_manager - INFO - Lade bestehenden FAISS-Index aus index.faiss...
+2025-04-24 15:15:33 - app.embedding_manager - INFO - Lade Metadaten aus metadata.pkl...
+2025-04-24 15:15:33 - app.embedding_manager - INFO - Lade Chunk-Hashes aus chunk_hashes.pkl (falls vorhanden)...
+2025-04-24 15:15:33 - app.embedding_manager - INFO - Index mit 50379 Einträgen erfolgreich geladen.
+2025-04-24 15:15:33 - root - INFO - FAISS-Index mit 50379 Vektoren geladen (Ausgeführt in 0.14 Sekunden)
+2025-04-24 15:15:33 - app.rag_manager - INFO - Initialisiere Dependency Graph Builder...
+2025-04-24 15:15:33 - app.dependency_graph_builder - INFO - DependencyGraphBuilder initialisiert für: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:33 - app.rag_manager - INFO - Initialisiere Change Analyzer und Local Scan Manager...
+2025-04-24 15:15:33 - app.local_scan_manager - INFO - Loaded hashes for 54 files
+2025-04-24 15:15:33 - app.rag_manager - INFO - Aktiviere automatische Synchronisierung (Intervall: 270s)
+2025-04-24 15:15:33 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:33 - app.rag_manager - INFO - Automatische Synchronisierung gestartet (Intervall: 270s)
+2025-04-24 15:15:33 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:33 - main - INFO - Application started, checking index and dependency graph...
+2025-04-24 15:15:33 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:34 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-04-24 15:15:34 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-04-24 15:15:34 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-04-24 15:15:39 - app.rag_manager - INFO - Initialisiere RAGManager für Verzeichnis: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:39 - app.rag_manager - INFO - Absoluter Pfad: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:39 - app.rag_manager - INFO - Initialisiere Preprocessor...
+2025-04-24 15:15:39 - app.preprocessor - INFO - Preprocessor initialized for: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:39 - app.rag_manager - INFO - Initialisiere Embedding Manager...
+2025-04-24 15:15:39 - app.embedding_manager - INFO - Lade SentenceTransformer-Modell 'all-MiniLM-L6-v2'...
+2025-04-24 15:15:39 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-24 15:15:39 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-24 15:15:40 - root - INFO - Modell 'all-MiniLM-L6-v2' erfolgreich geladen (Ausgeführt in 1.52 Sekunden)
+2025-04-24 15:15:40 - app.embedding_manager - INFO - Lade bestehenden FAISS-Index aus index.faiss...
+2025-04-24 15:15:40 - app.embedding_manager - INFO - Lade Metadaten aus metadata.pkl...
+2025-04-24 15:15:41 - app.embedding_manager - INFO - Lade Chunk-Hashes aus chunk_hashes.pkl (falls vorhanden)...
+2025-04-24 15:15:41 - app.embedding_manager - INFO - Index mit 50379 Einträgen erfolgreich geladen.
+2025-04-24 15:15:41 - root - INFO - FAISS-Index mit 50379 Vektoren geladen (Ausgeführt in 0.14 Sekunden)
+2025-04-24 15:15:41 - app.rag_manager - INFO - Initialisiere Dependency Graph Builder...
+2025-04-24 15:15:41 - app.dependency_graph_builder - INFO - DependencyGraphBuilder initialisiert für: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:41 - app.rag_manager - INFO - Initialisiere Change Analyzer und Local Scan Manager...
+2025-04-24 15:15:41 - app.local_scan_manager - INFO - Loaded hashes for 54 files
+2025-04-24 15:15:41 - app.rag_manager - INFO - Aktiviere automatische Synchronisierung (Intervall: 270s)
+2025-04-24 15:15:41 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:41 - app.rag_manager - INFO - Automatische Synchronisierung gestartet (Intervall: 270s)
+2025-04-24 15:15:41 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:41 - main - INFO - Application started, checking index and dependency graph...
+2025-04-24 15:15:41 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:15:41 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:15:41 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:15:41 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.04s)
+2025-04-24 15:15:41 - root - INFO - Keine Änderungen gefunden (Scan in 0.04s) (Ausgeführt in 0.03 Sekunden)
+2025-04-24 15:15:41 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
+2025-04-24 15:16:57 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-04-24 15:16:57 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-04-24 15:16:57 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-04-24 15:17:02 - app.rag_manager - INFO - Initialisiere RAGManager für Verzeichnis: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:02 - app.rag_manager - INFO - Absoluter Pfad: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:02 - app.rag_manager - INFO - Initialisiere Preprocessor...
+2025-04-24 15:17:02 - app.preprocessor - INFO - Preprocessor initialized for: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:02 - app.rag_manager - INFO - Initialisiere Embedding Manager...
+2025-04-24 15:17:02 - app.embedding_manager - INFO - Lade SentenceTransformer-Modell 'all-MiniLM-L6-v2'...
+2025-04-24 15:17:02 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-24 15:17:02 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-24 15:17:03 - root - INFO - Modell 'all-MiniLM-L6-v2' erfolgreich geladen (Ausgeführt in 1.80 Sekunden)
+2025-04-24 15:17:03 - app.embedding_manager - INFO - Lade bestehenden FAISS-Index aus index.faiss...
+2025-04-24 15:17:03 - app.embedding_manager - INFO - Lade Metadaten aus metadata.pkl...
+2025-04-24 15:17:03 - app.embedding_manager - INFO - Lade Chunk-Hashes aus chunk_hashes.pkl (falls vorhanden)...
+2025-04-24 15:17:03 - app.embedding_manager - INFO - Index mit 50379 Einträgen erfolgreich geladen.
+2025-04-24 15:17:03 - root - INFO - FAISS-Index mit 50379 Vektoren geladen (Ausgeführt in 0.18 Sekunden)
+2025-04-24 15:17:03 - app.rag_manager - INFO - Initialisiere Dependency Graph Builder...
+2025-04-24 15:17:03 - app.dependency_graph_builder - INFO - DependencyGraphBuilder initialisiert für: D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:03 - app.rag_manager - INFO - Initialisiere Change Analyzer und Local Scan Manager...
+2025-04-24 15:17:04 - app.local_scan_manager - INFO - Loaded hashes for 54 files
+2025-04-24 15:17:04 - app.rag_manager - INFO - Aktiviere automatische Synchronisierung (Intervall: 270s)
+2025-04-24 15:17:04 - app.rag_manager - INFO - Automatische Synchronisierung des lokalen Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:04 - app.rag_manager - INFO - Automatische Synchronisierung gestartet (Intervall: 270s)
+2025-04-24 15:17:04 - app.rag_manager - INFO - Scan nach Änderungen des Verzeichnisses D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:04 - main - INFO - Application started, checking index and dependency graph...
+2025-04-24 15:17:04 - app.local_scan_manager - INFO - Starte rekursiven Scan in D:\DevEnv\DevProjects\OeHT_ML_Bilanzanalyse
+2025-04-24 15:17:04 - app.local_scan_manager - INFO - Saved hashes for 54 files
+2025-04-24 15:17:04 - app.local_scan_manager - INFO - Scan abgeschlossen: 54 Dateien gescannt, 0 geändert, 0 gelöscht
+2025-04-24 15:17:04 - app.rag_manager - INFO - Keine Änderungen im lokalen Verzeichnis gefunden (Scan in 0.04s)
+2025-04-24 15:17:04 - root - INFO - Keine Änderungen gefunden (Scan in 0.04s) (Ausgeführt in 0.04 Sekunden)
+2025-04-24 15:17:04 - app.rag_manager - INFO - Nächste Synchronisierung in 270 Sekunden
