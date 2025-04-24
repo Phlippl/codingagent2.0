@@ -414,8 +414,8 @@ class EmbeddingManager:
         progress.start(desc=f"Entferne Chunks für {len(file_paths)} Dateien", total=2, unit="steps")
         
         file_path_set = set(file_paths)
-        chunks_to_keep = []
         metadata_to_keep = []
+        chunks_to_keep = []
         removed_chunks = 0
         removed_hashes = []
         
@@ -432,8 +432,9 @@ class EmbeddingManager:
                 removed_hashes.append(chunk_key)
             else:
                 # Behalte diesen Chunk
-                chunks_to_keep.append(i)
                 metadata_to_keep.append(meta)
+                if i < self.index.ntotal:  # Stellen Sie sicher, dass wir keine ungültigen Indizes verwenden
+                    chunks_to_keep.append(i)
         
         progress.update(1)
         
@@ -455,23 +456,27 @@ class EmbeddingManager:
             new_index = faiss.IndexIVFFlat(quantizer, dim, nlist)
             # Training ist erforderlich für IVF
             if len(chunks_to_keep) >= 1000:
-                # Extrahiere bestehende Vektoren für Training
-                vectors = []
-                for idx in chunks_to_keep[:1000]:  # Verwende maximal 1000 für Training
-                    vector = faiss.vector_to_array(self.index.reconstruct(idx))
-                    vectors.append(vector)
-                train_vectors = np.vstack(vectors).astype('float32')
-                new_index.train(train_vectors)
+                # Für das Training müssen wir zufällige Vektoren verwenden, wenn wir die existierenden nicht rekonstruieren können
+                new_index.train(np.random.random((1000, dim)).astype('float32'))
             else:
                 # Nicht genug Daten, verwende zufällige Vektoren
                 new_index.train(np.random.random((1000, dim)).astype('float32'))
             new_index.nprobe = 10
         
-        # Kopiere die verbleibenden Vektoren in den neuen Index
-        sub_progress = tqdm(chunks_to_keep, desc="Kopiere Vektoren", unit="vektoren")
-        for idx in sub_progress:
-            vector = faiss.vector_to_array(self.index.reconstruct(idx)).reshape(1, -1)
-            new_index.add(vector)
+        # Kopiere die verbleibenden Vektoren in den neuen Index, aber nur wenn der Index vom Typ "flat" ist
+        # Bei "flat" können wir direkt alle verbleibenden Vektoren hinzufügen
+        if self.index_type == "flat" and hasattr(self.index, "reconstruct_batch"):
+            try:
+                # Versuche, alle Vektoren auf einmal zu rekonstruieren (effizient für große Datasets)
+                vectors = self.index.reconstruct_batch(np.array(chunks_to_keep, dtype=np.int64))
+                new_index.add(vectors)
+            except Exception as e:
+                logger.error(f"Fehler bei der Batch-Rekonstruktion: {str(e)}")
+                # Fallback: Füge alle Embedding-Vektoren neu hinzu
+                self._rebuild_index_from_scratch(new_index, metadata_to_keep)
+        else:
+            # Für andere Indextypen oder wenn reconstruct_batch nicht verfügbar ist
+            self._rebuild_index_from_scratch(new_index, metadata_to_keep)
         
         # Ersetze den alten Index und die Metadaten
         self.index = new_index
@@ -510,3 +515,36 @@ class EmbeddingManager:
             logger.error(f"Fehler beim Speichern des aktualisierten Index: {str(e)}")
             progress.finish("Fehler beim Speichern des aktualisierten Index")
             return {"status": "error", "message": str(e)}
+
+    def _rebuild_index_from_scratch(self, new_index, metadata_to_keep):
+        """
+        Hilfsmethode zum vollständigen Neuaufbau eines Index aus den Metadaten.
+        
+        Args:
+            new_index: Der neue FAISS-Index, in den die Vektoren eingefügt werden sollen
+            metadata_to_keep: Metadaten der zu behaltenden Chunks
+        """
+        logger.info(f"Baue Index komplett neu auf mit {len(metadata_to_keep)} Chunks")
+        
+        # Extrahiere Code aus Metadaten
+        texts = [meta["code"] for meta in metadata_to_keep]
+        
+        # Erstelle neue Embeddings
+        if texts:
+            batch_size = 32
+            total_batches = (len(texts) + batch_size - 1) // batch_size
+            
+            sub_progress = tqdm(total=len(texts), desc="Erzeuge neue Embeddings", unit="chunks")
+            
+            for i in range(0, len(texts), batch_size):
+                batch_texts = texts[i:i+batch_size]
+                batch_embeddings = self.model.encode(batch_texts, show_progress_bar=False)
+                batch_embeddings = batch_embeddings.astype(np.float32)
+                
+                # Füge Batch zum neuen Index hinzu
+                new_index.add(batch_embeddings)
+                sub_progress.update(len(batch_texts))
+                
+            sub_progress.close()
+        else:
+            logger.warning("Keine Chunks zum Neuerstellen des Index")
